@@ -27,6 +27,10 @@ venv/
 .env.*
 !.env.example
 
+# Secrets — connection strings belong in `dotnet user-secrets`, never in the repo
+appsettings.*.local.json
+secrets.json
+
 # IDE
 .vscode/
 .idea/
