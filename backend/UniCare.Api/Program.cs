@@ -1,6 +1,12 @@
+using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using UniCare.Api.Configuration;
 using UniCare.Api.Data;
+
+// Load backend/UniCare.Api/.env into the environment before configuration is read.
+// The file is gitignored; see .env.example for the expected keys.
+Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,13 +15,17 @@ const string FrontendCorsPolicy = "frontend";
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// The connection string is never committed. Supply it locally with:
-//   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "<Neon connection string>"
-// and in deployed environments with the ConnectionStrings__DefaultConnection env var.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+// The connection string is never committed. Set DATABASE_URL in .env for local work, or
+// supply DATABASE_URL / ConnectionStrings__DefaultConnection as an environment variable
+// in deployed environments.
+var rawConnectionString =
+    Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' is not configured. " +
-        "Run: dotnet user-secrets set \"ConnectionStrings:DefaultConnection\" \"<Neon connection string>\"");
+        "No database connection string found. Copy backend/UniCare.Api/.env.example to .env " +
+        "and set DATABASE_URL to your Neon connection string.");
+
+var connectionString = NeonConnectionString.FromUri(rawConnectionString);
 
 builder.Services.AddDbContext<UniCareDbContext>(options =>
     options.UseNpgsql(connectionString));
