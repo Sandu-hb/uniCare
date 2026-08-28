@@ -28,10 +28,9 @@ public static class NeonConnectionString
             Database = uri.AbsolutePath.Trim('/'),
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : null,
-            SslMode = SslMode.Require,
-            // Neon terminates TLS at its proxy with a certificate Npgsql cannot chain-verify
-            // locally; the connection is still encrypted.
-            TrustServerCertificate = true
+            // Neon requires TLS. Npgsql's Require mode encrypts without demanding a chain the
+            // client can verify locally, which is what Neon's proxy expects.
+            SslMode = SslMode.Require
         };
 
         return builder.ConnectionString;
