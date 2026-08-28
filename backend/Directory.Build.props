@@ -1,0 +1,22 @@
+<Project>
+
+  <!--
+    MSBuild walks up the directory tree and applies this file to every project
+    beneath it, so these settings are declared once instead of in all seven
+    .csproj files. Anything genuinely project-specific still goes in its .csproj.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Nullable reference types: `string` means never null, `string?` means it
+         may be. This is what lets an entity's type declare which columns are
+         optional, so we never rely on a comment to say so. -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- A warning that never fails a build eventually gets ignored. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

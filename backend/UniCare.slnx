@@ -1,3 +1,13 @@
 <Solution>
-  <Project Path="UniCare.Api/UniCare.Api.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/UniCare.Api/UniCare.Api.csproj" />
+    <Project Path="src/UniCare.Application/UniCare.Application.csproj" />
+    <Project Path="src/UniCare.Domain/UniCare.Domain.csproj" />
+    <Project Path="src/UniCare.Infrastructure/UniCare.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/UniCare.Api.IntegrationTests/UniCare.Api.IntegrationTests.csproj" />
+    <Project Path="tests/UniCare.Application.UnitTests/UniCare.Application.UnitTests.csproj" />
+    <Project Path="tests/UniCare.Domain.UnitTests/UniCare.Domain.UnitTests.csproj" />
+  </Folder>
 </Solution>

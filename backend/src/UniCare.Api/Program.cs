@@ -1,10 +1,8 @@
 using DotNetEnv;
-using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
-using UniCare.Api.Configuration;
-using UniCare.Api.Data;
+using UniCare.Infrastructure;
 
-// Load backend/UniCare.Api/.env into the environment before configuration is read.
+// Load src/UniCare.Api/.env into the environment before configuration is read.
 // The file is gitignored; see .env.example for the expected keys.
 Env.TraversePath().Load();
 
@@ -15,20 +13,9 @@ const string FrontendCorsPolicy = "frontend";
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// The connection string is never committed. Set DATABASE_URL in .env for local work, or
-// supply DATABASE_URL / ConnectionStrings__DefaultConnection as an environment variable
-// in deployed environments.
-var rawConnectionString =
-    Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException(
-        "No database connection string found. Copy backend/UniCare.Api/.env.example to .env " +
-        "and set DATABASE_URL to your Neon connection string.");
-
-var connectionString = NeonConnectionString.FromUri(rawConnectionString);
-
-builder.Services.AddDbContext<UniCareDbContext>(options =>
-    options.UseNpgsql(connectionString));
+// One call per layer. Everything EF Core related lives behind this method, which is
+// why this project has no EF Core package reference at all — check the .csproj.
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // In development the Vite dev server proxies /api to this process, so requests are
 // same-origin and CORS never applies. This policy is for deployed environments where
@@ -66,3 +53,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Top-level statements compile to an internal Program class, which
+// WebApplicationFactory<Program> in UniCare.Api.IntegrationTests cannot see.
+// Declaring it public partial makes the real pipeline testable.
+public partial class Program;
