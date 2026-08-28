@@ -8,6 +8,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/UniCare.Api.IntegrationTests/UniCare.Api.IntegrationTests.csproj" />
     <Project Path="tests/UniCare.Application.UnitTests/UniCare.Application.UnitTests.csproj" />
+    <Project Path="tests/UniCare.ArchitectureTests/UniCare.ArchitectureTests.csproj" />
     <Project Path="tests/UniCare.Domain.UnitTests/UniCare.Domain.UnitTests.csproj" />
   </Folder>
 </Solution>
