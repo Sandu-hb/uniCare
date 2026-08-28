@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using UniCare.Infrastructure.Persistence;
+using UniCare.Infrastructure.Data;
 
 namespace UniCare.Api.Controllers;
 
