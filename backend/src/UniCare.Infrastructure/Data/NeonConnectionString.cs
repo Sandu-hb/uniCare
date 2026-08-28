@@ -1,6 +1,6 @@
 using Npgsql;
 
-namespace UniCare.Infrastructure.Persistence;
+namespace UniCare.Infrastructure.Data;
 
 /// <summary>
 /// Neon hands out connection strings as URIs (postgresql://user:pass@host/db?sslmode=require),

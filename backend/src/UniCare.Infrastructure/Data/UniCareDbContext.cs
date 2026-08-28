@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace UniCare.Infrastructure.Persistence;
+namespace UniCare.Infrastructure.Data;
 
 /// <summary>
 /// The EF Core context for UniCare. Lives in Infrastructure, not Domain — entities

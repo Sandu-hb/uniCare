@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using UniCare.Infrastructure.Persistence;
+using UniCare.Infrastructure.Data;
 
 namespace UniCare.Infrastructure;
 
