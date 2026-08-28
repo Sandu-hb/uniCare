@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,23 +39,36 @@ export default function SystemStatus() {
   const [health, setHealth] = useState<HealthResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-
-  const check = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      setHealth(await getHealth())
-    } catch (err) {
-      setHealth(null)
-      setError(err instanceof Error ? err.message : 'Request failed')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
-    void check()
-  }, [check])
+    let cancelled = false
+
+    async function probe() {
+      try {
+        const data = await getHealth()
+        if (cancelled) return
+        setHealth(data)
+        setError(null)
+      } catch (err) {
+        if (cancelled) return
+        setHealth(null)
+        setError(err instanceof Error ? err.message : 'Request failed')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    void probe()
+    return () => {
+      cancelled = true
+    }
+  }, [attempt])
+
+  function recheck() {
+    setLoading(true)
+    setAttempt((n) => n + 1)
+  }
 
   const apiState: Probe = loading ? 'checking' : health ? 'up' : 'down'
   const dbState: Probe = loading
@@ -88,7 +101,8 @@ export default function SystemStatus() {
           {error && (
             <p className="mb-4 rounded-md bg-destructive/10 p-3 text-xs text-destructive">
               {error} — is the backend running? Try{' '}
-              <code className="font-mono">dotnet run</code> in <code className="font-mono">backend/UniCare.Api</code>.
+              <code className="font-mono">dotnet run</code> in{' '}
+              <code className="font-mono">backend/UniCare.Api</code>.
             </p>
           )}
 
@@ -96,7 +110,7 @@ export default function SystemStatus() {
             <p className="text-xs text-muted-foreground">
               {health ? new Date(health.timestamp).toLocaleTimeString() : '—'}
             </p>
-            <Button onClick={() => void check()} disabled={loading} size="sm">
+            <Button onClick={recheck} disabled={loading} size="sm">
               {loading ? 'Checking…' : 'Re-check'}
             </Button>
           </div>
