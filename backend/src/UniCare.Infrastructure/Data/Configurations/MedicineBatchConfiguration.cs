@@ -13,3 +13,4 @@ public class MedicineBatchConfiguration : IEntityTypeConfiguration<MedicineBatch
         builder.HasIndex(b => b.ExpiryDate);
     }
 }
+
