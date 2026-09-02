@@ -1,5 +1,8 @@
 using DotNetEnv;
 using Scalar.AspNetCore;
+using System.Text.Json.Serialization;     // ← ADD (JsonStringEnumConverter, line 15)
+using UniCare.Api.Middleware;             // ← ADD (GlobalExceptionHandler)
+using UniCare.Application;
 using UniCare.Infrastructure;
 
 // Load src/UniCare.Api/.env into the environment before configuration is read.
@@ -10,13 +13,21 @@ var builder = WebApplication.CreateBuilder(args);
 
 const string FrontendCorsPolicy = "frontend";
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi();
 
 // One call per layer. Everything EF Core related lives behind this method, which is
 // why this project has no EF Core package reference at all — check the .csproj.
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
+// Turns domain exceptions into ProblemDetails responses.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+// In development the Vite dev server proxies...
 // In development the Vite dev server proxies /api to this process, so requests are
 // same-origin and CORS never applies. This policy is for deployed environments where
 // the SPA is served from a different origin.
@@ -34,6 +45,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// First in the pipeline — it must wrap everything downstream to catch their exceptions.
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

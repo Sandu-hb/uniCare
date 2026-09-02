@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using UniCare.Domain.Entities;
 
 namespace UniCare.Application.Features.Students.Dtos;
@@ -5,10 +6,10 @@ namespace UniCare.Application.Features.Students.Dtos;
 public static class StudentMappings
 {
     /// <summary>
-    /// Written as an expression so EF Core can translate it into SQL. Used with
-    /// .Select(), Postgres returns only these columns instead of whole entities.
+    /// An expression tree, not a method — EF Core inspects it and emits a SELECT of
+    /// exactly these columns. Use inside database queries: .Select(StudentMappings.Projection)
     /// </summary>
-    public static StudentDto ToDto(this Student student) => new()
+    public static Expression<Func<Student, StudentDto>> Projection => student => new StudentDto
     {
         Id = student.Id,
         RegistrationNumber = student.RegistrationNumber,
@@ -24,4 +25,10 @@ public static class StudentMappings
         EmergencyContactName = student.EmergencyContactName,
         EmergencyContactNumber = student.EmergencyContactNumber,
     };
+
+    /// <summary>
+    /// For entities already in memory — after an Add, or a tracked lookup. Compiles the
+    /// same expression, so the two shapes can never drift apart.
+    /// </summary>
+    public static StudentDto ToDto(this Student student) => Projection.Compile()(student);
 }
