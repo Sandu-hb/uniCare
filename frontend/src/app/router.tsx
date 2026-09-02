@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ROLES, STAFF_ROLES } from '@/config/roles'
 import { ROUTES } from '@/config/routes'
+import { StudentsPage } from '@/features/students/StudentsPage'
 import { SystemStatusPage } from '@/features/system/SystemStatusPage'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { StaffLayout } from '@/layouts/StaffLayout'
@@ -16,7 +17,8 @@ export function AppRouter() {
     <Routes>
       {/* Public */}
       <Route path={ROUTES.systemStatus} element={<SystemStatusPage />} />
-
+      {/* TODO(auth): move inside ProtectedRoute allowedRoles={STAFF_ROLES} once login exists */}
+      <Route path="/students" element={<StudentsPage />} />
       <Route element={<AuthLayout />}>
         {/* TODO(auth): <Route path={ROUTES.login} element={<LoginPage />} /> */}
       </Route>

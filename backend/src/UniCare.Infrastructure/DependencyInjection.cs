@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using UniCare.Application.Abstractions;
 using UniCare.Infrastructure.Data;
+using UniCare.Infrastructure.Data.Interceptors;
 
 namespace UniCare.Infrastructure;
 
@@ -30,8 +31,11 @@ public static class DependencyInjection
 
         // Scoped lifetime: one DbContext per HTTP request. It is not thread-safe and
         // it tracks changes, so a singleton would leak entities between users.
-        services.AddDbContext<UniCareDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        services.AddScoped<AuditingInterceptor>();
+
+        services.AddDbContext<UniCareDbContext>((sp, options) =>
+            options.UseNpgsql(connectionString)
+                   .AddInterceptors(sp.GetRequiredService<AuditingInterceptor>()));
 
         // Hand Application the SAME context instance already registered above.
         // Writing AddScoped<IApplicationDbContext, UniCareDbContext>() instead would

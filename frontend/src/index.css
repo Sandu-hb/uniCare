@@ -49,72 +49,95 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    /* UniCare palette — Material Blue Grey.
+       The five brand swatches (#CFD8DC #B0BEC5 #90A4AE #78909C #607D8B) are all
+       mid-tones, so grounds and body text extend the same scale at both ends
+       (50 / 800 / 900) rather than introducing a second hue. */
+    --background: #f5f7f8;
+    --foreground: #263238;
+    --card: #ffffff;
+    --card-foreground: #263238;
+    --popover: #ffffff;
+    --popover-foreground: #263238;
+
+    /* Blue Grey 600 rather than 500 for solid buttons: #607D8B with white text
+       sits just under WCAG AA for normal text. 500 still appears as an accent. */
+    --primary: #546e7a;
+    --primary-foreground: #ffffff;
+
+    --secondary: #eceff1;
+    --secondary-foreground: #37474f;
+    --muted: #eceff1;
+    --muted-foreground: #607d8b;
+    --accent: #cfd8dc;
+    --accent-foreground: #263238;
+
+    /* Semantic, deliberately outside the palette — an error rendered in blue-grey
+       would not read as an error. */
+    --destructive: #c62828;
+
+    --border: #cfd8dc;
+    --input: #b0bec5;
+    --ring: #78909c;
+
+    /* The five supplied swatches, light to dark. */
+    --chart-1: #cfd8dc;
+    --chart-2: #b0bec5;
+    --chart-3: #90a4ae;
+    --chart-4: #78909c;
+    --chart-5: #607d8b;
+
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+
+    --sidebar: #eceff1;
+    --sidebar-foreground: #263238;
+    --sidebar-primary: #546e7a;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #cfd8dc;
+    --sidebar-accent-foreground: #263238;
+    --sidebar-border: #cfd8dc;
+    --sidebar-ring: #78909c;
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --background: #1b242a;
+    --foreground: #eceff1;
+    --card: #263238;
+    --card-foreground: #eceff1;
+    --popover: #263238;
+    --popover-foreground: #eceff1;
+
+    /* Inverted on dark: the mid-tone carries the accent, dark ground carries text. */
+    --primary: #90a4ae;
+    --primary-foreground: #1b242a;
+
+    --secondary: #37474f;
+    --secondary-foreground: #eceff1;
+    --muted: #37474f;
+    --muted-foreground: #b0bec5;
+    --accent: #455a64;
+    --accent-foreground: #eceff1;
+
+    --destructive: #ef9a9a;
+
+    --border: #37474f;
+    --input: #455a64;
+    --ring: #90a4ae;
+
+    --chart-1: #cfd8dc;
+    --chart-2: #b0bec5;
+    --chart-3: #90a4ae;
+    --chart-4: #78909c;
+    --chart-5: #607d8b;
+
+    --sidebar: #263238;
+    --sidebar-foreground: #eceff1;
+    --sidebar-primary: #90a4ae;
+    --sidebar-primary-foreground: #1b242a;
+    --sidebar-accent: #455a64;
+    --sidebar-accent-foreground: #eceff1;
+    --sidebar-border: #37474f;
+    --sidebar-ring: #90a4ae;
 }
 
 @layer base {
