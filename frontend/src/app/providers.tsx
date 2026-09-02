@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { queryClient } from '@/lib/query-client'
+import { Toaster } from '@/components/ui/sonner'
+
 
 /**
  * Every app-wide provider in one place, so main.tsx stays a single render call
@@ -12,7 +14,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <Toaster richColors />
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )
