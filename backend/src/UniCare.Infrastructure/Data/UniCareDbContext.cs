@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using UniCare.Application.Abstractions;
 using UniCare.Domain.Entities;
 using UniCare.Domain.Enums;
 
@@ -9,7 +10,7 @@ namespace UniCare.Infrastructure.Data;
 /// must know nothing about how they are persisted.
 /// </summary>
 public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
-    : DbContext(options)
+    : DbContext(options), IApplicationDbContext
 {
     // People
     public DbSet<Student> Students => Set<Student>();
