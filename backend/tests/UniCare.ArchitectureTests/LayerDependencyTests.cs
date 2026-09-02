@@ -59,16 +59,16 @@ public class LayerDependencyTests
     }
 
     [Fact]
-    public void Application_Should_Not_DependOn_EntityFrameworkCore()
+    public void Application_Should_Not_DependOn_DatabaseProvider()
     {
         var result = Types.InAssembly(ApplicationAssembly)
             .Should()
-            .NotHaveDependencyOn("Microsoft.EntityFrameworkCore")
+            .NotHaveDependencyOn("Npgsql")
             .GetResult();
 
         result.IsSuccessful.Should().BeTrue(
-            "Application reaches the database through IApplicationDbContext, never EF Core directly. " +
-            "Offenders: {0}",
+            "Application may query through EF Core abstractions, but must never know which "
+            + "database it is talking to. Offenders: {0}",
             string.Join(", ", result.FailingTypeNames ?? []));
     }
 
