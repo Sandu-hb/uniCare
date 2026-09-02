@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using UniCare.Application.Abstractions;
 using UniCare.Infrastructure.Data;
 
 namespace UniCare.Infrastructure;
@@ -32,6 +33,14 @@ public static class DependencyInjection
         services.AddDbContext<UniCareDbContext>(options =>
             options.UseNpgsql(connectionString));
 
+        // Hand Application the SAME context instance already registered above.
+        // Writing AddScoped<IApplicationDbContext, UniCareDbContext>() instead would
+        // create a second context per request — changes tracked on one would not be
+        // saved by the other.
+        services.AddScoped<IApplicationDbContext>(sp =>
+            sp.GetRequiredService<UniCareDbContext>());
+
         return services;
+
     }
 }
