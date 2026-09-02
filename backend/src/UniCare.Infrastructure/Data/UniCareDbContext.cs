@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UniCare.Domain.Entities;
+using UniCare.Domain.Enums;
 
 namespace UniCare.Infrastructure.Data;
 
@@ -38,5 +39,39 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
         // Picks up every IEntityTypeConfiguration<T> in this assembly, so adding a new
         // entity configuration never requires editing this method.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(UniCareDbContext).Assembly);
+
+        // EF defaults required relationships to cascade delete. Deleting a student would
+        // take their visits, consultations, diagnoses and prescriptions with them.
+        // Make the database refuse instead — medical history is never collateral damage.
+        foreach (var foreignKey in modelBuilder.Model
+                     .GetEntityTypes()
+                     .SelectMany(entityType => entityType.GetForeignKeys()))
+        {
+            foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
+        }
+
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+    {
+        base.ConfigureConventions(builder);
+
+        // Store enums as text, not integers. With ints, inserting a new member in the
+        // middle later shifts every value below it and silently reinterprets old rows.
+        builder.Properties<Gender>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<BloodGroup>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<VerificationStatus>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<AppointmentStatus>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<StaffRole>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<VisitStatus>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<QueueStage>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<PrescriptionStatus>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<MedicineForm>().HaveConversion<string>().HaveMaxLength(32);
+
+        // Heights and weights: 4 digits, 2 decimal places — 180.50cm, 72.25kg.
+        builder.Properties<decimal>().HavePrecision(6, 2);
+
+        // A sane default so no column becomes unbounded text by accident.
+        builder.Properties<string>().HaveMaxLength(256);
     }
 }
