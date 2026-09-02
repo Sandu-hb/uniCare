@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using UniCare.Domain.Entities;
 
 namespace UniCare.Infrastructure.Data;
 
@@ -9,8 +10,26 @@ namespace UniCare.Infrastructure.Data;
 public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
     : DbContext(options)
 {
-    // A DbSet<T> per entity goes here as the domain model is written, e.g.
-    //   public DbSet<Student> Students => Set<Student>();
+    // People
+    public DbSet<Student> Students => Set<Student>();
+    public DbSet<Staff> Staff => Set<Staff>();
+
+    // Medical records
+    public DbSet<MedicalProfile> MedicalProfiles => Set<MedicalProfile>();
+
+    // Visit lifecycle
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<MedicalVisit> MedicalVisits => Set<MedicalVisit>();
+    public DbSet<QueueEntry> QueueEntries => Set<QueueEntry>();
+    public DbSet<VitalSign> VitalSigns => Set<VitalSign>();
+    public DbSet<Consultation> Consultations => Set<Consultation>();
+    public DbSet<Diagnosis> Diagnoses => Set<Diagnosis>();
+
+    // Pharmacy
+    public DbSet<Prescription> Prescriptions => Set<Prescription>();
+    public DbSet<PrescriptionItem> PrescriptionItems => Set<PrescriptionItem>();
+    public DbSet<Medicine> Medicines => Set<Medicine>();
+    public DbSet<MedicineBatch> MedicineBatches => Set<MedicineBatch>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
