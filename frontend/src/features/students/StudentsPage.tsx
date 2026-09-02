@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { ThemeToggle } from '@/components/common/ThemeToggle'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { CreateStudentDialog } from './components/CreateStudentDialog'
 import { useStudents } from './hooks'
@@ -35,7 +36,10 @@ export function StudentsPage() {
             {data ? `${data.totalCount} registered` : 'Loading…'}
           </p>
         </div>
-        <CreateStudentDialog />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <CreateStudentDialog />
+        </div>
       </div>
 
       <div className="mb-4 flex items-center gap-3">
