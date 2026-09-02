@@ -32,7 +32,12 @@ appsettings.*.local.json
 secrets.json
 
 # IDE
-.vscode/
+# Share the workspace settings (they fix C# Dev Kit solution discovery);
+# ignore everything else VS Code writes. Note the /* rather than / — git cannot
+# re-include a file whose parent directory is itself excluded.
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 
 # OS
