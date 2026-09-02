@@ -1,5 +1,7 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using UniCare.Application.Abstractions;
+using UniCare.Domain.Common;
 using UniCare.Domain.Entities;
 using UniCare.Domain.Enums;
 
@@ -40,6 +42,24 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
         // Picks up every IEntityTypeConfiguration<T> in this assembly, so adding a new
         // entity configuration never requires editing this method.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(UniCareDbContext).Assembly);
+
+
+        // Soft-deleted rows are invisible to normal queries. EF appends this predicate
+        // to every query for these types; call IgnoreQueryFilters() to see them.
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (!typeof(AuditableEntity).IsAssignableFrom(entityType.ClrType)) continue;
+
+            // No generic type parameter is available in this loop, so the predicate
+            // e => !e.IsDeleted has to be built as an expression tree by hand.
+            var parameter = Expression.Parameter(entityType.ClrType, "e");
+            var body = Expression.Not(
+                Expression.Property(parameter, nameof(AuditableEntity.IsDeleted)));
+
+            modelBuilder.Entity(entityType.ClrType)
+                .HasQueryFilter(Expression.Lambda(body, parameter));
+        }
+
 
         // EF defaults required relationships to cascade delete. Deleting a student would
         // take their visits, consultations, diagnoses and prescriptions with them.
