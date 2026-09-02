@@ -1,0 +1,31 @@
+{
+  // The solution lives in backend/, not at the workspace root. Without this,
+  // C# Dev Kit finds no solution, falls back to miscellaneous-files mode, and
+  // reports "problems loading project <SomeFile>.cs" for every open file.
+  "dotnet.defaultSolution": "backend/UniCare.slnx",
+
+  // Build output is noisy and large across 8 projects — keep it out of search,
+  // the file watcher and the explorer.
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/node_modules/**": true
+  },
+
+  "[csharp]": {
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4
+  },
+  "[typescript]": { "editor.formatOnSave": true },
+  "[typescriptreact]": { "editor.formatOnSave": true }
+}
