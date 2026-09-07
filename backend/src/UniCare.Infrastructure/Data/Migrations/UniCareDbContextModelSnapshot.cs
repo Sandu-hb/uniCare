@@ -187,6 +187,128 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.ToTable("Diagnoses");
                 });
 
+            modelBuilder.Entity("UniCare.Domain.Entities.DocumentExtraction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ExtractedFieldsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MedicalDocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("OverallConfidence")
+                        .HasPrecision(4, 3)
+                        .HasColumnType("numeric(4,3)");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Provider")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RawText")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicalDocumentId")
+                        .IsUnique();
+
+                    b.ToTable("DocumentExtractions");
+                });
+
+            modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StorageKey")
+                        .IsUnique();
+
+                    b.HasIndex("StudentId", "UploadedAt");
+
+                    b.ToTable("MedicalDocuments");
+                });
+
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -850,6 +972,28 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Navigation("Consultation");
                 });
 
+            modelBuilder.Entity("UniCare.Domain.Entities.DocumentExtraction", b =>
+                {
+                    b.HasOne("UniCare.Domain.Entities.MedicalDocument", "MedicalDocument")
+                        .WithOne("Extraction")
+                        .HasForeignKey("UniCare.Domain.Entities.DocumentExtraction", "MedicalDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MedicalDocument");
+                });
+
+            modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
+                {
+                    b.HasOne("UniCare.Domain.Entities.Student", "Student")
+                        .WithMany("Documents")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalProfile", b =>
                 {
                     b.HasOne("UniCare.Domain.Entities.Student", "Student")
@@ -970,6 +1114,11 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Navigation("Prescription");
                 });
 
+            modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
+                {
+                    b.Navigation("Extraction");
+                });
+
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalVisit", b =>
                 {
                     b.Navigation("Consultation");
@@ -992,6 +1141,8 @@ namespace UniCare.Infrastructure.Data.Migrations
             modelBuilder.Entity("UniCare.Domain.Entities.Student", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("Documents");
 
                     b.Navigation("MedicalProfile");
 
