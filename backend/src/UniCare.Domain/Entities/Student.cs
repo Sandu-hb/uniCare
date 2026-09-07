@@ -24,4 +24,7 @@ public class Student : AuditableEntity
     public MedicalProfile? MedicalProfile { get; set; }
     public ICollection<Appointment> Appointments { get; set; } = [];
     public ICollection<MedicalVisit> Visits { get; set; } = [];
+
+    public ICollection<MedicalDocument> Documents { get; set; } = [];
+
 }
