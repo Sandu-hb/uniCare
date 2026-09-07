@@ -29,3 +29,7 @@ public enum QueueStage { Nurse, Doctor, Pharmacy, Laboratory }
 public enum PrescriptionStatus { Issued, PartiallyDispensed, Dispensed, Cancelled }
 
 public enum MedicineForm { Tablet, Capsule, Syrup, Injection, Ointment, Drops, Inhaler, Other }
+
+public enum DocumentType { HospitalReport, LabReport, VaccinationRecord, DentalReport, Other }
+
+public enum DocumentStatus { Uploaded, Processing, Extracted, Failed }
