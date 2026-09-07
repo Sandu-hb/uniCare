@@ -23,6 +23,9 @@ public interface IApplicationDbContext
     DbSet<PrescriptionItem> PrescriptionItems { get; }
     DbSet<Medicine> Medicines { get; }
     DbSet<MedicineBatch> MedicineBatches { get; }
+    DbSet<MedicalDocument> MedicalDocuments { get; }
+    DbSet<DocumentExtraction> DocumentExtractions { get; }
+
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
