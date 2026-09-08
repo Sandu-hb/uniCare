@@ -93,14 +93,16 @@ public class MedicalProfileService(IApplicationDbContext db) : IMedicalProfileSe
     }
 
     public async Task<MedicalProfileDto> VerifyAsync(
-        Guid studentId, Guid verifiedByStaffId, CancellationToken cancellationToken = default)
+        Guid studentId, Guid reviewerApplicationUserId, CancellationToken cancellationToken = default)
     {
         var profile = await LoadAsync(studentId, cancellationToken);
         EnsureAwaitingReview(profile, "verified");
 
+        var staffId = await ResolveStaffIdAsync(reviewerApplicationUserId, cancellationToken);
+
         profile.Status = VerificationStatus.Verified;
         profile.VerifiedAt = DateTimeOffset.UtcNow;
-        profile.VerifiedByStaffId = verifiedByStaffId;
+        profile.VerifiedByStaffId = staffId;
         profile.RejectionReason = null;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -108,16 +110,18 @@ public class MedicalProfileService(IApplicationDbContext db) : IMedicalProfileSe
     }
 
     public async Task<MedicalProfileDto> RejectAsync(
-        Guid studentId, Guid rejectedByStaffId, string reason,
+        Guid studentId, Guid reviewerApplicationUserId, string reason,
         CancellationToken cancellationToken = default)
     {
         var profile = await LoadAsync(studentId, cancellationToken);
         EnsureAwaitingReview(profile, "rejected");
 
+        var staffId = await ResolveStaffIdAsync(reviewerApplicationUserId, cancellationToken);
+
         profile.Status = VerificationStatus.Rejected;
         profile.RejectionReason = reason.Trim();
         // Records who reviewed it, whichever way the decision went.
-        profile.VerifiedByStaffId = rejectedByStaffId;
+        profile.VerifiedByStaffId = staffId;
         profile.VerifiedAt = null;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -128,6 +132,19 @@ public class MedicalProfileService(IApplicationDbContext db) : IMedicalProfileSe
         await db.MedicalProfiles
             .FirstOrDefaultAsync(p => p.StudentId == studentId, cancellationToken)
             ?? throw new NotFoundException(nameof(MedicalProfile), studentId);
+
+    /// <summary>
+    /// The JWT only carries the signed-in ApplicationUser's id. Staff.Id — the
+    /// value clinical records actually need — is a separate row looked up via
+    /// Staff.ApplicationUserId, since Domain cannot reference Identity directly.
+    /// </summary>
+    private async Task<Guid> ResolveStaffIdAsync(Guid applicationUserId, CancellationToken cancellationToken) =>
+        await db.Staff
+            .Where(s => s.ApplicationUserId == applicationUserId)
+            .Select(s => s.Id)
+            .FirstOrDefaultAsync(cancellationToken) is var staffId && staffId != Guid.Empty
+            ? staffId
+            : throw new NotFoundException(nameof(Staff), applicationUserId);
 
     private static void EnsureAwaitingReview(MedicalProfile profile, string action)
     {
@@ -150,4 +167,3 @@ public class MedicalProfileService(IApplicationDbContext db) : IMedicalProfileSe
         profile.DentalExamination = request.DentalExamination?.Trim();
     }
 }
-    

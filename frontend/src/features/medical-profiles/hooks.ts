@@ -47,11 +47,10 @@ export function useSubmitMedicalProfile(studentId: string) {
 }
 
 export function useVerifyMedicalProfile(studentId: string) {
-  return useProfileMutation(studentId, (staffId: string) =>
-    verifyMedicalProfile(studentId, staffId))
+  return useProfileMutation(studentId, () => verifyMedicalProfile(studentId))
 }
 
 export function useRejectMedicalProfile(studentId: string) {
-  return useProfileMutation(studentId, ({ staffId, reason }: { staffId: string; reason: string }) =>
-    rejectMedicalProfile(studentId, staffId, reason))
+  return useProfileMutation(studentId, ({ reason }: { reason: string }) =>
+    rejectMedicalProfile(studentId, reason))
 }
