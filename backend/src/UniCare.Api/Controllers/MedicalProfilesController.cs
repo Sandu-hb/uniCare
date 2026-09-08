@@ -1,7 +1,10 @@
+using System.Security.Claims;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UniCare.Application.Features.MedicalProfiles;
 using UniCare.Application.Features.MedicalProfiles.Dtos;
+using UniCare.Domain.Constants;
 
 namespace UniCare.Api.Controllers;
 
@@ -16,6 +19,8 @@ public class MedicalProfilesController(
     IValidator<UpsertMedicalProfileRequest> upsertValidator,
     IValidator<RejectMedicalProfileRequest> rejectValidator) : ControllerBase
 {
+    private const string ReviewerRoles = $"{AppRoles.Doctor},{AppRoles.Nurse},{AppRoles.Admin}";
+
     [HttpGet]
     public async Task<ActionResult<MedicalProfileDto>> Get(
         Guid studentId, CancellationToken cancellationToken)
@@ -49,19 +54,19 @@ public class MedicalProfilesController(
         return Ok(await profileService.SubmitAsync(studentId, cancellationToken));
     }
 
-    // TODO(auth): the reviewing staff id must come from the JWT, not the caller.
-    // Until then it is passed explicitly so the workflow can be exercised.
     [HttpPost("verify")]
+    [Authorize(Roles = ReviewerRoles)]
     public async Task<ActionResult<MedicalProfileDto>> Verify(
-        Guid studentId, [FromQuery] Guid staffId, CancellationToken cancellationToken)
+        Guid studentId, CancellationToken cancellationToken)
     {
-        return Ok(await profileService.VerifyAsync(studentId, staffId, cancellationToken));
+        var reviewerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        return Ok(await profileService.VerifyAsync(studentId, reviewerId, cancellationToken));
     }
 
     [HttpPost("reject")]
+    [Authorize(Roles = ReviewerRoles)]
     public async Task<ActionResult<MedicalProfileDto>> Reject(
         Guid studentId,
-        [FromQuery] Guid staffId,
         RejectMedicalProfileRequest request,
         CancellationToken cancellationToken)
     {
@@ -75,7 +80,8 @@ public class MedicalProfilesController(
             return ValidationProblem(ModelState);
         }
 
+        var reviewerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await profileService.RejectAsync(
-            studentId, staffId, request.Reason, cancellationToken));
+            studentId, reviewerId, request.Reason, cancellationToken));
     }
 }
