@@ -1,6 +1,14 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { DashboardPlaceholder } from '@/components/common/DashboardPlaceholder'
 import { ROLES, STAFF_ROLES } from '@/config/roles'
 import { ROUTES } from '@/config/routes'
+import { ChooseRolePage } from '@/features/auth/ChooseRolePage'
+import { ForbiddenPage } from '@/features/auth/ForbiddenPage'
+import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
+import { LoginPage } from '@/features/auth/LoginPage'
+import { PendingApprovalPage } from '@/features/auth/PendingApprovalPage'
+import { RegisterStaffPage } from '@/features/auth/RegisterStaffPage'
+import { RegisterStudentPage } from '@/features/auth/RegisterStudentPage'
 import { MedicalProfilePage } from '@/features/medical-profiles/MedicalProfilePage'
 import { StudentsPage } from '@/features/students/StudentsPage'
 import { SystemStatusPage } from '@/features/system/SystemStatusPage'
@@ -8,6 +16,7 @@ import { AuthLayout } from '@/layouts/AuthLayout'
 import { StaffLayout } from '@/layouts/StaffLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
 import { ProtectedRoute } from './ProtectedRoute'
+import { PublicOnlyRoute } from './PublicOnlyRoute'
 
 /**
  * The whole route tree. Guards wrap route *groups*, so adding a page inside a
@@ -16,34 +25,42 @@ import { ProtectedRoute } from './ProtectedRoute'
 export function AppRouter() {
   return (
     <Routes>
-      {/* TODO(auth): wrap this group in <ProtectedRoute allowedRoles={STAFF_ROLES} />
-          once login exists. Until then these pages are reachable by anyone. */}
-      <Route element={<StaffLayout />}>
-        <Route path={ROUTES.systemStatus} element={<SystemStatusPage />} />
-        <Route path="/students" element={<StudentsPage />} />
-        <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
-      </Route>
-
-      <Route element={<AuthLayout />}>
-        {/* TODO(auth): <Route path={ROUTES.login} element={<LoginPage />} /> */}
-      </Route>
-
-      {/* Student area — empty until login exists; ProtectedRoute redirects everything. */}
-      <Route element={<ProtectedRoute allowedRoles={[ROLES.Student]} />}>
-        <Route element={<StudentLayout />}>
-          {/* TODO: student dashboard, medical profile, documents, appointments */}
+      <Route element={<PublicOnlyRoute />}>
+        <Route element={<AuthLayout />}>
+          <Route path={ROUTES.login} element={<LoginPage />} />
+          <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
         </Route>
+
+        <Route path={ROUTES.register} element={<ChooseRolePage />} />
+        <Route path={ROUTES.registerStudent} element={<RegisterStudentPage />} />
+        <Route path={ROUTES.registerStaff} element={<RegisterStaffPage />} />
       </Route>
 
-      {/* Staff area — populated once the group above moves behind the guard. */}
+      <Route path={ROUTES.pendingApproval} element={<PendingApprovalPage />} />
+      <Route path={ROUTES.forbidden} element={<ForbiddenPage />} />
+
       <Route element={<ProtectedRoute allowedRoles={STAFF_ROLES} />}>
         <Route element={<StaffLayout />}>
-          {/* TODO: staff dashboard, appointments, queue, pharmacy, lab */}
+          <Route path={ROUTES.staff.dashboard} element={<DashboardPlaceholder title="Staff dashboard" />} />
+          <Route path={ROUTES.systemStatus} element={<SystemStatusPage />} />
+          {/* StudentsPage/MedicalProfilePage link to these exact paths directly, not via ROUTES.staff.students */}
+          <Route path="/students" element={<StudentsPage />} />
+          <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
         </Route>
       </Route>
 
-      {/* Until login exists, land on the status page so the app is verifiable. */}
-      <Route path="*" element={<Navigate to={ROUTES.systemStatus} replace />} />
+      <Route element={<ProtectedRoute allowedRoles={[ROLES.Student]} />}>
+        <Route element={<StudentLayout />}>
+          <Route
+            path={ROUTES.student.dashboard}
+            element={<DashboardPlaceholder title="Student dashboard" />}
+          />
+          {/* TODO: medical profile, documents, appointments, prescriptions, reports */}
+        </Route>
+      </Route>
+
+      <Route path={ROUTES.root} element={<Navigate to={ROUTES.login} replace />} />
+      <Route path="*" element={<Navigate to={ROUTES.login} replace />} />
     </Routes>
   )
 }

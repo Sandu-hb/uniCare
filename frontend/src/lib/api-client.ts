@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios'
+import { clearToken, readToken } from './token-storage'
 
 /**
  * Shared HTTP client for the UniCare API.
@@ -13,29 +14,9 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-const TOKEN_KEY = 'unicare.token'
-
-export function getToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_KEY)
-  } catch {
-    // Private browsing and blocked site data both throw here.
-    return null
-  }
-}
-
-export function setToken(token: string | null): void {
-  try {
-    if (token === null) localStorage.removeItem(TOKEN_KEY)
-    else localStorage.setItem(TOKEN_KEY, token)
-  } catch {
-    // Non-fatal: the user stays logged in for this tab only.
-  }
-}
-
 // Attach the JWT to every outgoing request.
 apiClient.interceptors.request.use((config) => {
-  const token = getToken()
+  const token = readToken()
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -48,7 +29,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      setToken(null)
+      clearToken()
       if (window.location.pathname !== '/login') {
         window.location.assign('/login')
       }

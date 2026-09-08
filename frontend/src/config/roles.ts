@@ -28,3 +28,7 @@ export const STAFF_ROLES: Role[] = [
 
 /** Roles permitted to record clinical findings against a patient. */
 export const CLINICAL_ROLES: Role[] = [ROLES.Nurse, ROLES.Doctor, ROLES.Dentist]
+
+export function isStaffRole(role: Role): boolean {
+  return (STAFF_ROLES as string[]).includes(role)
+}
