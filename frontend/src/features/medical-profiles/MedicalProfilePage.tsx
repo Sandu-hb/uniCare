@@ -102,9 +102,14 @@ export function MedicalProfilePage() {
 
     return (
         <div className="mx-auto max-w-3xl p-6">
-            <Link to="/students" className="text-xs text-muted-foreground hover:underline">
-                ← Back to students
-            </Link>
+            <div className="flex items-center justify-between">
+                <Link to="/students" className="text-xs text-muted-foreground hover:underline">
+                    ← Back to students
+                </Link>
+                <Link to={`/students/${studentId}/documents`} className="text-xs text-muted-foreground hover:underline">
+                    View documents →
+                </Link>
+            </div>
 
             <div className="mt-3 mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div>
