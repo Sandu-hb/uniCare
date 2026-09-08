@@ -1,5 +1,5 @@
 import { ROLES, type Role } from '@/config/roles'
-import type { AccountStatus, CurrentUser, LoginRequest, LoginResponse } from './types'
+import type { AccountStatus, CurrentUser, LoginRequest, LoginResponse, RefreshResponse } from './types'
 
 /**
  * In-memory stand-in for the real ASP.NET Core auth endpoints, selected by
@@ -68,10 +68,12 @@ function toUser(account: MockAccount): CurrentUser {
   }
 }
 
-// Mirrors a JWT closely enough for the client: opaque, and traceable back to
-// the account it was minted for.
 function tokenFor(account: MockAccount): string {
   return `mock.${account.id}`
+}
+
+function refreshTokenFor(account: MockAccount): string {
+  return `mock.refresh.${account.id}`
 }
 
 export async function login({ email, password }: LoginRequest): Promise<LoginResponse> {
@@ -83,7 +85,39 @@ export async function login({ email, password }: LoginRequest): Promise<LoginRes
   if (account.status === 'Suspended') {
     throw new AuthApiError(403, 'This account has been suspended. Contact the medical centre.')
   }
-  return { token: tokenFor(account), user: toUser(account) }
+  const now = new Date()
+  const accessExpiry = new Date(now.getTime() + 15 * 60 * 1000).toISOString()
+  const refreshExpiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+
+  return {
+    token: tokenFor(account),
+    expiresAtUtc: accessExpiry,
+    refreshToken: refreshTokenFor(account),
+    refreshTokenExpiresAtUtc: refreshExpiry,
+    user: toUser(account),
+  }
+}
+
+export async function refresh(refreshToken: string): Promise<RefreshResponse> {
+  await delay()
+  const account = accounts.find((a) => refreshTokenFor(a) === refreshToken)
+  if (!account) {
+    throw new AuthApiError(401, 'Session expired. Sign in again.')
+  }
+  if (account.status === 'Suspended') {
+    throw new AuthApiError(403, 'This account has been suspended.')
+  }
+  const now = new Date()
+  const accessExpiry = new Date(now.getTime() + 15 * 60 * 1000).toISOString()
+  const refreshExpiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
+
+  return {
+    token: tokenFor(account),
+    expiresAtUtc: accessExpiry,
+    refreshToken: refreshTokenFor(account),
+    refreshTokenExpiresAtUtc: refreshExpiry,
+    user: toUser(account),
+  }
 }
 
 export async function me(token: string): Promise<CurrentUser> {

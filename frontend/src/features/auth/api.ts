@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api-client'
-import { readToken } from '@/lib/token-storage'
+import { readRefreshToken, readToken } from '@/lib/token-storage'
 import * as mockApi from './mock-api'
-import type { CurrentUser, LoginRequest, LoginResponse } from './types'
+import type { CurrentUser, LoginRequest, LoginResponse, RefreshResponse } from './types'
 
 /**
  * Switches between the in-memory mock and the real backend by one env flag,
@@ -22,6 +22,13 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
   return data
 }
 
+export async function refresh(refreshToken: string): Promise<RefreshResponse> {
+  if (USE_MOCK_AUTH) return mockApi.refresh(refreshToken)
+
+  const { data } = await apiClient.post<RefreshResponse>('/auth/refresh', { refreshToken })
+  return data
+}
+
 export async function me(): Promise<CurrentUser> {
   if (USE_MOCK_AUTH) {
     const token = readToken()
@@ -34,6 +41,11 @@ export async function me(): Promise<CurrentUser> {
 }
 
 export async function logout(): Promise<void> {
+  const refreshToken = readRefreshToken()
   if (USE_MOCK_AUTH) return mockApi.logout()
-  await apiClient.post('/auth/logout')
+  if (refreshToken) {
+    await apiClient.post('/auth/logout', { refreshToken }).catch(() => {
+      // Ignore network errors during logout
+    })
+  }
 }

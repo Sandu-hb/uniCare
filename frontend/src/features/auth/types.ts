@@ -18,7 +18,22 @@ export interface LoginRequest {
   password: string
 }
 
+export interface RefreshRequest {
+  refreshToken: string
+}
+
 export interface LoginResponse {
   token: string
+  expiresAtUtc: string
+  refreshToken: string
+  refreshTokenExpiresAtUtc: string
+  user: CurrentUser
+}
+
+export interface RefreshResponse {
+  token: string
+  expiresAtUtc: string
+  refreshToken: string
+  refreshTokenExpiresAtUtc: string
   user: CurrentUser
 }

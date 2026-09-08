@@ -1,7 +1,13 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using UniCare.Application.Abstractions;
+using UniCare.Application.Features.Auth;
+using UniCare.Infrastructure.Authentication;
 using UniCare.Infrastructure.Data;
 using UniCare.Infrastructure.Data.Interceptors;
 
@@ -44,7 +50,58 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(sp =>
             sp.GetRequiredService<UniCareDbContext>());
 
-        return services;
+        // AddIdentityCore rather than AddIdentity: this is a JSON API with no cookie
+        // sign-in or scaffolded UI, so only the pieces that manage users, roles and
+        // passwords are needed.
+        services.AddIdentityCore<ApplicationUser>(options =>
+            {
+                options.Password.RequiredLength = 8;
+                options.Password.RequireNonAlphanumeric = false;
+                options.User.RequireUniqueEmail = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+            })
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<UniCareDbContext>()
+            .AddSignInManager();
 
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<JwtTokenGenerator>();
+
+        // Same pattern as DATABASE_URL: real value in src/UniCare.Api/.env locally,
+        // a real environment variable once deployed. Never committed — see .env.example.
+        var jwtOptions = new JwtOptions
+        {
+            Secret = Environment.GetEnvironmentVariable("JWT_SECRET")
+                ?? throw new InvalidOperationException(
+                    "JWT_SECRET is not set. Copy src/UniCare.Api/.env.example to .env and fill it in."),
+            Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "UniCare",
+            Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "UniCareClient",
+            ExpiryMinutes = int.TryParse(Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES"), out var minutes)
+                ? minutes
+                : 60,
+        };
+
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(jwtOptions));
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtOptions.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtOptions.Audience,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Secret)),
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.FromSeconds(30),
+                };
+            });
+
+        services.AddAuthorization();
+
+        return services;
     }
 }

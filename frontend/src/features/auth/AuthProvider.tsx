@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { clearToken, readToken, writeToken } from '@/lib/token-storage'
+import { clearToken, readToken, writeTokens } from '@/lib/token-storage'
 import * as authApi from './api'
 import { AuthContext, type AuthContextValue } from './auth-context'
 import type { CurrentUser, SessionStatus } from './types'
@@ -50,11 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: status === 'authenticated' && user !== null,
       hasRole: (...roles) => user !== null && roles.some((r) => user.roles.includes(r)),
       login: async (email, password) => {
-        const { token, user: nextUser } = await authApi.login({ email, password })
-        writeToken(token)
-        setUser(nextUser)
+        const response = await authApi.login({ email, password })
+        writeTokens(response.token, response.refreshToken)
+        setUser(response.user)
         setStatus('authenticated')
-        return nextUser
+        return response.user
       },
       logout: async () => {
         try {
