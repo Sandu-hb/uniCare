@@ -18,6 +18,11 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Staff> Staff => Set<Staff>();
 
+    // Documents
+    public DbSet<MedicalDocument> MedicalDocuments => Set<MedicalDocument>();
+    public DbSet<DocumentExtraction> DocumentExtractions => Set<DocumentExtraction>();
+
+
     // Medical records
     public DbSet<MedicalProfile> MedicalProfiles => Set<MedicalProfile>();
 
