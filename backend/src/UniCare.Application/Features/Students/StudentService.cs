@@ -101,8 +101,10 @@ public class StudentService(IApplicationDbContext db) : IStudentService
     }
 
     public async Task<StudentDto> UpdateAsync(
+
         Guid id, UpdateStudentRequest request, CancellationToken cancellationToken = default)
     {
+
         // Tracked on purpose — EF must detect the changes in order to save them.
         var student = await db.Students
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken)
@@ -122,4 +124,9 @@ public class StudentService(IApplicationDbContext db) : IStudentService
 
         return student.ToDto();
     }
+
+    public async Task<bool> IsOwnedByApplicationUserAsync(
+        Guid studentId, Guid applicationUserId, CancellationToken cancellationToken = default) =>
+        await db.Students.AnyAsync(
+            s => s.Id == studentId && s.ApplicationUserId == applicationUserId, cancellationToken);
 }
