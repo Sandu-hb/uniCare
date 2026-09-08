@@ -20,9 +20,6 @@ import {
     type BloodGroup, type UpsertMedicalProfileRequest, type VerificationStatus,
 } from './types'
 
-// TODO(auth): the reviewing staff id must come from the signed-in user.
-const PLACEHOLDER_STAFF_ID = '7f6b9f58-4764-4a4e-9b00-db373c9f30b0'
-
 function statusVariant(status: VerificationStatus) {
     if (status === 'Verified') return 'default' as const
     if (status === 'Rejected') return 'destructive' as const
@@ -78,7 +75,7 @@ export function MedicalProfilePage() {
     }
 
     function onVerify() {
-        verify.mutate(PLACEHOLDER_STAFF_ID, {
+        verify.mutate(undefined, {
             onSuccess: () => toast.success('Profile verified'),
             onError: (e) => toast.error(getApiErrorMessage(e)),
         })
@@ -88,7 +85,7 @@ export function MedicalProfilePage() {
         const reason = window.prompt('What needs to change?')
         if (!reason?.trim()) return
         reject.mutate(
-            { staffId: PLACEHOLDER_STAFF_ID, reason },
+            { reason },
             {
                 onSuccess: () => toast.success('Changes requested'),
                 onError: (e) => toast.error(getApiErrorMessage(e)),
