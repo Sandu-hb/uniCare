@@ -344,12 +344,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ErrorMessage")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("ExtractedFieldsJson")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
@@ -363,8 +357,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal?>("OverallConfidence")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
                         .HasPrecision(4, 3)
                         .HasColumnType("numeric(4,3)");
 
@@ -372,12 +364,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Provider")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<string>("RawText")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
@@ -395,7 +381,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.HasIndex("MedicalDocumentId")
                         .IsUnique();
 
-                    b.ToTable("DocumentExtraction");
                     b.ToTable("DocumentExtractions");
                 });
 
@@ -407,8 +392,6 @@ namespace UniCare.Infrastructure.Data.Migrations
 
                     b.Property<string>("ContentType")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
@@ -429,8 +412,6 @@ namespace UniCare.Infrastructure.Data.Migrations
 
                     b.Property<string>("OriginalFileName")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -442,8 +423,6 @@ namespace UniCare.Infrastructure.Data.Migrations
 
                     b.Property<string>("StorageKey")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
@@ -461,9 +440,6 @@ namespace UniCare.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("MedicalDocument");
                     b.HasIndex("Status");
 
                     b.HasIndex("StorageKey")
