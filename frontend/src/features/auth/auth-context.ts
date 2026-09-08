@@ -1,13 +1,14 @@
 import { createContext, use } from 'react'
 import type { Role } from '@/config/roles'
-import type { CurrentUser } from './types'
+import type { CurrentUser, SessionStatus } from './types'
 
 export interface AuthContextValue {
   user: CurrentUser | null
+  status: SessionStatus
   isAuthenticated: boolean
   hasRole: (...roles: Role[]) => boolean
-  signIn: (token: string, user: CurrentUser) => void
-  signOut: () => void
+  login: (email: string, password: string) => Promise<CurrentUser>
+  logout: () => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

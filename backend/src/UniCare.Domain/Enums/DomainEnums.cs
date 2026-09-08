@@ -33,3 +33,10 @@ public enum MedicineForm { Tablet, Capsule, Syrup, Injection, Ointment, Drops, I
 public enum DocumentType { HospitalReport, LabReport, VaccinationRecord, DentalReport, Other }
 
 public enum DocumentStatus { Uploaded, Processing, Extracted, Failed }
+
+/// <summary>
+/// Lifecycle of a sign-in account, as distinct from a Staff row's IsActive flag —
+/// this describes whether the account may sign in at all, not whether the person
+/// currently works here.
+/// </summary>
+public enum AccountStatus { Active, PendingApproval, Suspended }

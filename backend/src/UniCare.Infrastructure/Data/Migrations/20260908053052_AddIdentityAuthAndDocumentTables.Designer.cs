@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UniCare.Infrastructure.Data;
@@ -11,9 +12,11 @@ using UniCare.Infrastructure.Data;
 namespace UniCare.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(UniCareDbContext))]
-    partial class UniCareDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260908053052_AddIdentityAuthAndDocumentTables")]
+    partial class AddIdentityAuthAndDocumentTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -350,11 +353,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Property<string>("ExtractedFieldsJson")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<string>("ExtractedFieldsJson")
-                        .HasColumnType("jsonb");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -365,8 +363,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Property<decimal?>("OverallConfidence")
                         .HasPrecision(6, 2)
                         .HasColumnType("numeric(6,2)");
-                        .HasPrecision(4, 3)
-                        .HasColumnType("numeric(4,3)");
 
                     b.Property<DateTimeOffset?>("ProcessedAt")
                         .HasColumnType("timestamp with time zone");
@@ -378,11 +374,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Property<string>("RawText")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("RawText")
-                        .HasColumnType("text");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -396,7 +387,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("DocumentExtraction");
-                    b.ToTable("DocumentExtractions");
                 });
 
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
@@ -409,8 +399,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -431,8 +419,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<long>("SizeBytes")
                         .HasColumnType("bigint");
@@ -444,8 +430,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
@@ -464,14 +448,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.HasIndex("StudentId");
 
                     b.ToTable("MedicalDocument");
-                    b.HasIndex("Status");
-
-                    b.HasIndex("StorageKey")
-                        .IsUnique();
-
-                    b.HasIndex("StudentId", "UploadedAt");
-
-                    b.ToTable("MedicalDocuments");
                 });
 
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalProfile", b =>

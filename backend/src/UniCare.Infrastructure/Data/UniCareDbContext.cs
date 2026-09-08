@@ -1,18 +1,23 @@
 using System.Linq.Expressions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using UniCare.Application.Abstractions;
 using UniCare.Domain.Common;
 using UniCare.Domain.Entities;
 using UniCare.Domain.Enums;
+using UniCare.Infrastructure.Authentication;
 
 namespace UniCare.Infrastructure.Data;
 
 /// <summary>
 /// The EF Core context for UniCare. Lives in Infrastructure, not Domain — entities
-/// must know nothing about how they are persisted.
+/// must know nothing about how they are persisted. Also the Identity store: one
+/// context and one migration history for the whole database, rather than a
+/// second DbContext and connection just for sign-in tables.
 /// </summary>
 public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
-    : DbContext(options), IApplicationDbContext
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options), IApplicationDbContext
 {
     // People
     public DbSet<Student> Students => Set<Student>();
@@ -69,8 +74,11 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
         // EF defaults required relationships to cascade delete. Deleting a student would
         // take their visits, consultations, diagnoses and prescriptions with them.
         // Make the database refuse instead — medical history is never collateral damage.
+        // Scoped to our own entities only: Identity's own join tables (user roles,
+        // claims, logins) should still cascade when a user is deleted.
         foreach (var foreignKey in modelBuilder.Model
                      .GetEntityTypes()
+                     .Where(entityType => entityType.ClrType.Namespace?.StartsWith("UniCare.Domain") == true)
                      .SelectMany(entityType => entityType.GetForeignKeys()))
         {
             foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
@@ -93,6 +101,7 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
         builder.Properties<QueueStage>().HaveConversion<string>().HaveMaxLength(32);
         builder.Properties<PrescriptionStatus>().HaveConversion<string>().HaveMaxLength(32);
         builder.Properties<MedicineForm>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<AccountStatus>().HaveConversion<string>().HaveMaxLength(32);
 
         // Heights and weights: 4 digits, 2 decimal places — 180.50cm, 72.25kg.
         builder.Properties<decimal>().HavePrecision(6, 2);

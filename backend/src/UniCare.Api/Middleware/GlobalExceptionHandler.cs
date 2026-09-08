@@ -20,6 +20,9 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         {
             NotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
             ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
+            InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            InvalidRefreshTokenException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            AccountSuspendedException => (StatusCodes.Status403Forbidden, "Forbidden"),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred"),
         };
 

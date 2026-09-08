@@ -4,6 +4,7 @@ using Scalar.AspNetCore;
 using UniCare.Api.Middleware;
 using UniCare.Application;
 using UniCare.Infrastructure;
+using UniCare.Infrastructure.Authentication;
 
 // Load src/UniCare.Api/.env into the environment before configuration is read.
 // The file is gitignored; see .env.example for the expected keys.
@@ -52,6 +53,13 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+
+    // Demo accounts only (see IdentitySeeder) — never runs outside Development,
+    // so no seeded credentials can reach a deployed environment.
+    using (var scope = app.Services.CreateScope())
+    {
+        await IdentitySeeder.SeedAsync(scope.ServiceProvider);
+    }
 }
 else
 {
@@ -61,6 +69,7 @@ else
 
 app.UseCors(FrontendCorsPolicy);
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
