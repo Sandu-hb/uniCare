@@ -17,6 +17,7 @@ import { StaffLayout } from '@/layouts/StaffLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PublicOnlyRoute } from './PublicOnlyRoute'
+import { DocumentsPage } from '@/features/medical-documents/DocumentsPage'
 
 /**
  * The whole route tree. Guards wrap route *groups*, so adding a page inside a
@@ -43,6 +44,7 @@ export function AppRouter() {
         <Route element={<StaffLayout />}>
           <Route path={ROUTES.staff.dashboard} element={<DashboardPlaceholder title="Staff dashboard" />} />
           <Route path={ROUTES.systemStatus} element={<SystemStatusPage />} />
+          <Route path="/students/:studentId/documents" element={<DocumentsPage />} />
           {/* StudentsPage/MedicalProfilePage link to these exact paths directly, not via ROUTES.staff.students */}
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
