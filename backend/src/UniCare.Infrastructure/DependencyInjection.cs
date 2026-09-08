@@ -6,6 +6,7 @@ using UniCare.Infrastructure.Data;
 using UniCare.Infrastructure.Data.Interceptors;
 using UniCare.Infrastructure.Services;
 
+
 namespace UniCare.Infrastructure;
 
 /// <summary>
