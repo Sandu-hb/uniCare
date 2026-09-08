@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UniCare.Application.Features.MedicalProfiles;
 using UniCare.Application.Features.MedicalProfiles.Dtos;
+using UniCare.Application.Features.Students;
 using UniCare.Domain.Constants;
 
 namespace UniCare.Api.Controllers;
@@ -14,26 +15,48 @@ namespace UniCare.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/students/{studentId:guid}/medical-profile")]
+[Authorize]
 public class MedicalProfilesController(
     IMedicalProfileService profileService,
+    IStudentService studentService,
     IValidator<UpsertMedicalProfileRequest> upsertValidator,
     IValidator<RejectMedicalProfileRequest> rejectValidator) : ControllerBase
 {
     private const string ReviewerRoles = $"{AppRoles.Doctor},{AppRoles.Nurse},{AppRoles.Admin}";
 
+    private Guid CurrentApplicationUserId =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    private bool IsStaff() => AppRoles.Staff.Any(User.IsInRole);
+
+    /// <summary>Staff may view any profile; a student may only view their own.</summary>
     [HttpGet]
     public async Task<ActionResult<MedicalProfileDto>> Get(
         Guid studentId, CancellationToken cancellationToken)
     {
+        if (!IsStaff() &&
+            !await studentService.IsOwnedByApplicationUserAsync(studentId, CurrentApplicationUserId, cancellationToken))
+        {
+            return Forbid();
+        }
+
         var profile = await profileService.GetByStudentIdAsync(studentId, cancellationToken);
         return profile is null ? NotFound() : Ok(profile);
     }
 
-    /// <summary>Creates the profile on first call, updates it thereafter.</summary>
+    /// <summary>
+    /// Creates the profile on first call, updates it thereafter. Owner only — even
+    /// staff cannot edit a student's data, only verify or reject it once submitted.
+    /// </summary>
     [HttpPut]
     public async Task<ActionResult<MedicalProfileDto>> Upsert(
         Guid studentId, UpsertMedicalProfileRequest request, CancellationToken cancellationToken)
     {
+        if (!await studentService.IsOwnedByApplicationUserAsync(studentId, CurrentApplicationUserId, cancellationToken))
+        {
+            return Forbid();
+        }
+
         var validation = await upsertValidator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
         {
@@ -51,6 +74,11 @@ public class MedicalProfilesController(
     public async Task<ActionResult<MedicalProfileDto>> Submit(
         Guid studentId, CancellationToken cancellationToken)
     {
+        if (!await studentService.IsOwnedByApplicationUserAsync(studentId, CurrentApplicationUserId, cancellationToken))
+        {
+            return Forbid();
+        }
+
         return Ok(await profileService.SubmitAsync(studentId, cancellationToken));
     }
 
@@ -59,8 +87,7 @@ public class MedicalProfilesController(
     public async Task<ActionResult<MedicalProfileDto>> Verify(
         Guid studentId, CancellationToken cancellationToken)
     {
-        var reviewerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        return Ok(await profileService.VerifyAsync(studentId, reviewerId, cancellationToken));
+        return Ok(await profileService.VerifyAsync(studentId, CurrentApplicationUserId, cancellationToken));
     }
 
     [HttpPost("reject")]
@@ -80,8 +107,7 @@ public class MedicalProfilesController(
             return ValidationProblem(ModelState);
         }
 
-        var reviewerId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await profileService.RejectAsync(
-            studentId, reviewerId, request.Reason, cancellationToken));
+            studentId, CurrentApplicationUserId, request.Reason, cancellationToken));
     }
 }
