@@ -10,6 +10,8 @@ using UniCare.Application.Features.Auth;
 using UniCare.Infrastructure.Authentication;
 using UniCare.Infrastructure.Data;
 using UniCare.Infrastructure.Data.Interceptors;
+using UniCare.Infrastructure.Services;
+
 
 namespace UniCare.Infrastructure;
 
@@ -34,6 +36,8 @@ public static class DependencyInjection
                 "to .env and set DATABASE_URL to your Neon connection string.");
 
         var connectionString = NeonConnectionString.FromUri(rawConnectionString);
+
+        services.AddScoped<IFileStorage, CloudinaryFileStorage>();
 
         // Scoped lifetime: one DbContext per HTTP request. It is not thread-safe and
         // it tracks changes, so a singleton would leak entities between users.
