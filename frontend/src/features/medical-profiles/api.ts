@@ -27,20 +27,18 @@ export async function submitMedicalProfile(studentId: string): Promise<MedicalPr
   return data
 }
 
-// TODO(auth): staffId must come from the JWT once login exists.
-export async function verifyMedicalProfile(
-  studentId: string, staffId: string,
-): Promise<MedicalProfile> {
-  const { data } = await apiClient.post<MedicalProfile>(
-    `${base(studentId)}/verify`, null, { params: { staffId } })
+// The reviewer is derived server-side from the bearer token — apiClient's
+// interceptor already attaches it to every request, so there is nothing left
+// to pass here.
+export async function verifyMedicalProfile(studentId: string): Promise<MedicalProfile> {
+  const { data } = await apiClient.post<MedicalProfile>(`${base(studentId)}/verify`)
   return data
 }
 
 export async function rejectMedicalProfile(
-  studentId: string, staffId: string, reason: string,
+  studentId: string, reason: string,
 ): Promise<MedicalProfile> {
-  const { data } = await apiClient.post<MedicalProfile>(
-    `${base(studentId)}/reject`, { reason }, { params: { staffId } })
+  const { data } = await apiClient.post<MedicalProfile>(`${base(studentId)}/reject`, { reason })
   return data
 }
 
