@@ -42,3 +42,31 @@ export const registerStudentSchema = z
   })
 
 export type RegisterStudentFormValues = z.infer<typeof registerStudentSchema>
+
+export const CLINICAL_ROLE_OPTIONS = [
+  { value: 'Doctor', label: 'Medical Officer / General Physician' },
+  { value: 'Dentist', label: 'Dental Surgeon / Dentist' },
+  { value: 'Nurse', label: 'Nursing Officer / Staff Nurse' },
+  { value: 'PharmacyStaff', label: 'Pharmacist / Pharmacy Staff' },
+  { value: 'LabStaff', label: 'Laboratory Technician / Lab Staff' },
+  { value: 'Admin', label: 'Medical Centre Administrator' },
+  { value: 'SystemAdmin', label: 'System Administrator' },
+] as const
+
+export const registerStaffSchema = z
+  .object({
+    clinicalRole: z.string().min(1, 'Select your clinical role.'),
+    email: z
+      .string()
+      .min(1, 'Enter your university email address.')
+      .email('Enter a valid email address.')
+      .refine(isUniversityEmail, `Use your @${UNIVERSITY_DOMAIN} email address.`),
+    password: z.string().min(8, 'Password must be at least 8 characters.'),
+    confirmPassword: z.string().min(1, 'Re-enter your password.'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+  })
+
+export type RegisterStaffFormValues = z.infer<typeof registerStaffSchema>
