@@ -25,3 +25,20 @@ export const loginSchema = z.object({
 })
 
 export type LoginFormValues = z.infer<typeof loginSchema>
+
+export const registerStudentSchema = z
+  .object({
+    email: z
+      .string()
+      .min(1, 'Enter your university email address.')
+      .email('Enter a valid email address.')
+      .refine(isUniversityEmail, `Use your @${UNIVERSITY_DOMAIN} email address.`),
+    password: z.string().min(8, 'Password must be at least 8 characters.'),
+    confirmPassword: z.string().min(1, 'Re-enter your password.'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+  })
+
+export type RegisterStudentFormValues = z.infer<typeof registerStudentSchema>
