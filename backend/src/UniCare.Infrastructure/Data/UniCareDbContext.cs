@@ -71,7 +71,11 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
 
         // EF defaults required relationships to cascade delete. Deleting a student would
         // take their visits, consultations, diagnoses and prescriptions with them.
-        // Make the database refuse instead — medical history is never collateral damage.
+        // Make the database refuse instead, in case anything ever bypasses EF and issues
+        // a real SQL DELETE. Note this does NOT protect the app's own delete path: see
+        // AuditingInterceptor, which turns every EF delete into a soft-delete UPDATE —
+        // an UPDATE never trips this FK constraint, so Restrict alone does not stop a
+        // soft-deleted student's live appointments/consultations from being orphaned.
         // Scoped to our own entities only: Identity's own join tables (user roles,
         // claims, logins) should still cascade when a user is deleted.
         foreach (var foreignKey in modelBuilder.Model
