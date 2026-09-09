@@ -25,8 +25,6 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
 
     // Documents
     public DbSet<MedicalDocument> MedicalDocuments => Set<MedicalDocument>();
-    public DbSet<DocumentExtraction> DocumentExtractions => Set<DocumentExtraction>();
-
 
     // Medical records
     public DbSet<MedicalProfile> MedicalProfiles => Set<MedicalProfile>();
