@@ -100,6 +100,8 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
         builder.Properties<PrescriptionStatus>().HaveConversion<string>().HaveMaxLength(32);
         builder.Properties<MedicineForm>().HaveConversion<string>().HaveMaxLength(32);
         builder.Properties<AccountStatus>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<DocumentType>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<DocumentStatus>().HaveConversion<string>().HaveMaxLength(32);
 
         // Heights and weights: 4 digits, 2 decimal places — 180.50cm, 72.25kg.
         builder.Properties<decimal>().HavePrecision(6, 2);
