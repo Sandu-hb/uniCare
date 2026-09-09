@@ -49,6 +49,10 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Ignore<IdentityUserLogin<Guid>>();
+        modelBuilder.Ignore<IdentityUserClaim<Guid>>();
+        modelBuilder.Ignore<IdentityRoleClaim<Guid>>();
+
         // Picks up every IEntityTypeConfiguration<T> in this assembly, so adding a new
         // entity configuration never requires editing this method.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(UniCareDbContext).Assembly);
@@ -58,7 +62,10 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
         // to every query for these types; call IgnoreQueryFilters() to see them.
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            if (!typeof(AuditableEntity).IsAssignableFrom(entityType.ClrType)) continue;
+            if (!typeof(AuditableEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                continue;
+            }
 
             // No generic type parameter is available in this loop, so the predicate
             // e => !e.IsDeleted has to be built as an expression tree by hand.
