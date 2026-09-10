@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UniCare.Infrastructure.Data;
@@ -11,9 +12,11 @@ using UniCare.Infrastructure.Data;
 namespace UniCare.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(UniCareDbContext))]
-    partial class UniCareDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909052508_RemoveUnusedIdentityTables")]
+    partial class RemoveUnusedIdentityTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -252,6 +255,62 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.ToTable("Diagnoses");
                 });
 
+            modelBuilder.Entity("UniCare.Domain.Entities.DocumentExtraction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ExtractedFieldsJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MedicalDocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("OverallConfidence")
+                        .HasPrecision(4, 3)
+                        .HasColumnType("numeric(4,3)");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Provider")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RawText")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicalDocumentId")
+                        .IsUnique();
+
+                    b.ToTable("DocumentExtractions");
+                });
+
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
                 {
                     b.Property<Guid>("Id")
@@ -272,10 +331,8 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DocumentType")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -288,10 +345,8 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Property<long>("SizeBytes")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("StorageKey")
                         .IsRequired()
@@ -1088,6 +1143,17 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Navigation("Consultation");
                 });
 
+            modelBuilder.Entity("UniCare.Domain.Entities.DocumentExtraction", b =>
+                {
+                    b.HasOne("UniCare.Domain.Entities.MedicalDocument", "MedicalDocument")
+                        .WithOne("Extraction")
+                        .HasForeignKey("UniCare.Domain.Entities.DocumentExtraction", "MedicalDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MedicalDocument");
+                });
+
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
                 {
                     b.HasOne("UniCare.Domain.Entities.Student", "Student")
@@ -1217,6 +1283,11 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Navigation("Diagnoses");
 
                     b.Navigation("Prescription");
+                });
+
+            modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
+                {
+                    b.Navigation("Extraction");
                 });
 
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalVisit", b =>
