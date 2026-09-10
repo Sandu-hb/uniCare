@@ -51,6 +51,12 @@ public class AuditingInterceptor : SaveChangesInterceptor
                 case EntityState.Deleted:
                     // Medical records are never physically removed. Turn the DELETE
                     // into an UPDATE that flags the row instead.
+                    //
+                    // This does NOT check for live dependents first — UniCareDbContext's
+                    // Restrict delete behavior only guards a real SQL DELETE, which this
+                    // UPDATE never triggers. Any future feature that calls Remove() on an
+                    // entity with dependents (e.g. deactivating a Student who still has
+                    // active Appointments) must check for those itself before removing.
                     entry.State = EntityState.Modified;
                     entry.Entity.IsDeleted = true;
                     entry.Entity.DeletedAt = now;

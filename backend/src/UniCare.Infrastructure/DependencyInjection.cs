@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using UniCare.Application.Abstractions;
 using UniCare.Application.Features.Auth;
+using UniCare.Application.Features.Staff;
 using UniCare.Infrastructure.Authentication;
 using UniCare.Infrastructure.Data;
 using UniCare.Infrastructure.Data.Interceptors;
@@ -70,6 +71,7 @@ public static class DependencyInjection
             .AddSignInManager();
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IStaffService, StaffService>();
         services.AddScoped<JwtTokenGenerator>();
 
         // Same pattern as DATABASE_URL: real value in src/UniCare.Api/.env locally,

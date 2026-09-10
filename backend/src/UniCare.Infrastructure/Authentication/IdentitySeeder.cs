@@ -83,6 +83,25 @@ public static class IdentitySeeder
             });
         }
 
+        // Bootstrap account: self-registration deliberately cannot create an Admin,
+        // and admin-direct creation (StaffService.CreateAsync) requires an existing
+        // admin to call it — so exactly one admin must exist before either path works.
+        var admin = await EnsureUserAsync(
+            userManager, "admin@uom.lk", "Passw0rd", "Priyantha Bandara", AppRoles.Admin, AccountStatus.Active);
+
+        if (!await db.Staff.AnyAsync(s => s.ApplicationUserId == admin.Id))
+        {
+            db.Staff.Add(new Staff
+            {
+                ApplicationUserId = admin.Id,
+                StaffNumber = "STF-0003",
+                FullName = admin.FullName,
+                Email = admin.Email!,
+                Role = StaffRole.Admin,
+                IsActive = true,
+            });
+        }
+
         await db.SaveChangesAsync();
     }
 

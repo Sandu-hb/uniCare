@@ -25,8 +25,6 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
 
     // Documents
     public DbSet<MedicalDocument> MedicalDocuments => Set<MedicalDocument>();
-    public DbSet<DocumentExtraction> DocumentExtractions => Set<DocumentExtraction>();
-
 
     // Medical records
     public DbSet<MedicalProfile> MedicalProfiles => Set<MedicalProfile>();
@@ -73,7 +71,11 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
 
         // EF defaults required relationships to cascade delete. Deleting a student would
         // take their visits, consultations, diagnoses and prescriptions with them.
-        // Make the database refuse instead — medical history is never collateral damage.
+        // Make the database refuse instead, in case anything ever bypasses EF and issues
+        // a real SQL DELETE. Note this does NOT protect the app's own delete path: see
+        // AuditingInterceptor, which turns every EF delete into a soft-delete UPDATE —
+        // an UPDATE never trips this FK constraint, so Restrict alone does not stop a
+        // soft-deleted student's live appointments/consultations from being orphaned.
         // Scoped to our own entities only: Identity's own join tables (user roles,
         // claims, logins) should still cascade when a user is deleted.
         foreach (var foreignKey in modelBuilder.Model
@@ -102,6 +104,8 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
         builder.Properties<PrescriptionStatus>().HaveConversion<string>().HaveMaxLength(32);
         builder.Properties<MedicineForm>().HaveConversion<string>().HaveMaxLength(32);
         builder.Properties<AccountStatus>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<DocumentType>().HaveConversion<string>().HaveMaxLength(32);
+        builder.Properties<DocumentStatus>().HaveConversion<string>().HaveMaxLength(32);
 
         // Heights and weights: 4 digits, 2 decimal places — 180.50cm, 72.25kg.
         builder.Properties<decimal>().HavePrecision(6, 2);

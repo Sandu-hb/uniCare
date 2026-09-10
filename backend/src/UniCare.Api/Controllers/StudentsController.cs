@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UniCare.Application.Contracts;
 using UniCare.Application.Features.Students;
@@ -12,6 +14,15 @@ public class StudentsController(
     IStudentService studentService,
     IValidator<CreateStudentRequest> createValidator) : ControllerBase
 {
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<StudentDto>> GetMe(CancellationToken cancellationToken)
+    {
+        var applicationUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var student = await studentService.GetByApplicationUserIdAsync(applicationUserId, cancellationToken);
+        return student is null ? NotFound() : Ok(student);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<StudentDto>> GetById(Guid id, CancellationToken cancellationToken)
     {

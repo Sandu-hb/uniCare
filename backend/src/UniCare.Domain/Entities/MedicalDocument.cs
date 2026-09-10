@@ -32,6 +32,4 @@ public class MedicalDocument : AuditableEntity
 
     public DateTimeOffset UploadedAt { get; set; }
 
-    /// <summary>Null until the AI pipeline has processed it.</summary>
-    public DocumentExtraction? Extraction { get; set; }
 }
