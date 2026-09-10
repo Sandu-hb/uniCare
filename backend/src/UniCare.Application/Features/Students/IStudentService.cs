@@ -19,4 +19,6 @@ public interface IStudentService
     Task<bool> IsOwnedByApplicationUserAsync(
         Guid studentId, Guid applicationUserId, CancellationToken cancellationToken = default);
 
+    Task<StudentDto?> GetByApplicationUserIdAsync(
+        Guid applicationUserId, CancellationToken cancellationToken = default);
 }
