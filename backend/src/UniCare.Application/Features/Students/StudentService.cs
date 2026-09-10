@@ -129,4 +129,12 @@ public class StudentService(IApplicationDbContext db) : IStudentService
         Guid studentId, Guid applicationUserId, CancellationToken cancellationToken = default) =>
         await db.Students.AnyAsync(
             s => s.Id == studentId && s.ApplicationUserId == applicationUserId, cancellationToken);
+
+    public async Task<StudentDto?> GetByApplicationUserIdAsync(
+        Guid applicationUserId, CancellationToken cancellationToken = default) =>
+        await db.Students
+            .AsNoTracking()
+            .Where(s => s.ApplicationUserId == applicationUserId)
+            .Select(StudentMappings.Projection)
+            .FirstOrDefaultAsync(cancellationToken);
 }
