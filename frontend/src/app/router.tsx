@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { DashboardPlaceholder } from '@/components/common/DashboardPlaceholder'
 import { ROLES, STAFF_ROLES } from '@/config/roles'
 import { ROUTES } from '@/config/routes'
+import { StaffAppointmentsPage } from '@/features/appointments/StaffAppointmentsPage'
+import { StudentAppointmentsPage } from '@/features/appointments/StudentAppointmentsPage'
 import { ChooseRolePage } from '@/features/auth/ChooseRolePage'
 import { ForbiddenPage } from '@/features/auth/ForbiddenPage'
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
@@ -48,6 +50,7 @@ export function AppRouter() {
           {/* StudentsPage/MedicalProfilePage link to these exact paths directly, not via ROUTES.staff.students */}
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
+          <Route path={ROUTES.staff.appointments} element={<StaffAppointmentsPage />} />
         </Route>
       </Route>
 
@@ -57,7 +60,8 @@ export function AppRouter() {
             path={ROUTES.student.dashboard}
             element={<DashboardPlaceholder title="Student dashboard" />}
           />
-          {/* TODO: medical profile, documents, appointments, prescriptions, reports */}
+          <Route path={ROUTES.student.appointments} element={<StudentAppointmentsPage />} />
+          {/* TODO: medical profile, documents, prescriptions, reports */}
         </Route>
       </Route>
 

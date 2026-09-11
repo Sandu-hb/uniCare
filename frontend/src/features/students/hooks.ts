@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createStudent, getStudent, searchStudents, type SearchStudentsParams } from './api'
+import { createStudent, getMe, getStudent, searchStudents, type SearchStudentsParams } from './api'
 import type { CreateStudentRequest } from './types'
 
 /**
@@ -8,6 +8,7 @@ import type { CreateStudentRequest } from './types'
  */
 export const studentKeys = {
   all: ['students'] as const,
+  me: ['students', 'me'] as const,
   list: (params: SearchStudentsParams) => [...studentKeys.all, 'list', params] as const,
   detail: (id: string) => [...studentKeys.all, 'detail', id] as const,
 }
@@ -21,6 +22,13 @@ export function useStudents(params: SearchStudentsParams) {
     // Keeps the previous page visible while the next one loads, instead of
     // flashing an empty table on every keystroke.
     placeholderData: (previous) => previous,
+  })
+}
+
+export function useMyStudent() {
+  return useQuery({
+    queryKey: studentKeys.me,
+    queryFn: getMe,
   })
 }
 
