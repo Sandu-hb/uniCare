@@ -20,6 +20,12 @@ export async function getStudent(id: string): Promise<Student> {
   return data
 }
 
+/** Resolves the signed-in student's own record from their JWT. */
+export async function getMe(): Promise<Student> {
+  const { data } = await apiClient.get<Student>('/students/me')
+  return data
+}
+
 export async function createStudent(request: CreateStudentRequest): Promise<Student> {
   const { data } = await apiClient.post<Student>('/students', request)
   return data
