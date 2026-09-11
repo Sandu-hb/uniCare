@@ -4,6 +4,7 @@ import { ThemeToggle } from '@/components/common/ThemeToggle'
 // TODO(auth): show only the sections the signed-in role may use, via useAuth().hasRole.
 const links = [
   { to: '/students', label: 'Students' },
+  { to: '/staff/appointments', label: 'Appointments' },
   { to: '/system-status', label: 'System status' },
 ]
 
