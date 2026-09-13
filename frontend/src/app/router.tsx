@@ -12,6 +12,7 @@ import { PendingApprovalPage } from '@/features/auth/PendingApprovalPage'
 import { RegisterStaffPage } from '@/features/auth/RegisterStaffPage'
 import { RegisterStudentPage } from '@/features/auth/RegisterStudentPage'
 import { MedicalProfilePage } from '@/features/medical-profiles/MedicalProfilePage'
+import { StudentAccountsPage } from '@/features/students/StudentAccountsPage'
 import { StudentsPage } from '@/features/students/StudentsPage'
 import { SystemStatusPage } from '@/features/system/SystemStatusPage'
 import { AuthLayout } from '@/layouts/AuthLayout'
@@ -51,6 +52,10 @@ export function AppRouter() {
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
           <Route path={ROUTES.staff.appointments} element={<StaffAppointmentsPage />} />
+
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.Admin]} />}>
+            <Route path={ROUTES.staff.studentAccounts} element={<StudentAccountsPage />} />
+          </Route>
         </Route>
       </Route>
 
