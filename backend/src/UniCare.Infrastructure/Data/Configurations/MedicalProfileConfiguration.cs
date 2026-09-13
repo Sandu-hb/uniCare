@@ -17,6 +17,11 @@ public class MedicalProfileConfiguration : IEntityTypeConfiguration<MedicalProfi
         builder.Property(p => p.CurrentMedications).HasMaxLength(2000);
         builder.Property(p => p.EyeExamination).HasMaxLength(1000);
         builder.Property(p => p.DentalExamination).HasMaxLength(1000);
+        builder.Property(p => p.GeneralExamination).HasMaxLength(1000);
+        builder.Property(p => p.VaccinationDetails).HasMaxLength(2000);
+        builder.Property(p => p.FamilyMedicalHistory).HasMaxLength(2000);
+        builder.Property(p => p.PastMedicalHistory).HasMaxLength(2000);
+        builder.Property(p => p.Disability).HasMaxLength(1000);
         builder.Property(p => p.RejectionReason).HasMaxLength(1000);
     }
 }
