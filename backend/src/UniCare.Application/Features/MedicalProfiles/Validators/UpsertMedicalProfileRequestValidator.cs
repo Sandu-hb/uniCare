@@ -27,5 +27,10 @@ public class UpsertMedicalProfileRequestValidator : AbstractValidator<UpsertMedi
         RuleFor(x => x.CurrentMedications).MaximumLength(2000);
         RuleFor(x => x.EyeExamination).MaximumLength(1000);
         RuleFor(x => x.DentalExamination).MaximumLength(1000);
+        RuleFor(x => x.GeneralExamination).MaximumLength(1000);
+        RuleFor(x => x.VaccinationDetails).MaximumLength(2000);
+        RuleFor(x => x.FamilyMedicalHistory).MaximumLength(2000);
+        RuleFor(x => x.PastMedicalHistory).MaximumLength(2000);
+        RuleFor(x => x.Disability).MaximumLength(1000);
     }
 }
