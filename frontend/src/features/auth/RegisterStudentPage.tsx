@@ -17,27 +17,48 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ROUTES } from '@/config/routes'
+import { useRegisterStudent } from '@/features/students/hooks'
+import { GENDERS } from '@/features/students/types'
+import { getApiErrorMessage } from '@/lib/api-client'
 import { registerStudentSchema, UNIVERSITY_DOMAIN, type RegisterStudentFormValues } from './validation'
 
 export function RegisterStudentPage() {
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const registerStudent = useRegisterStudent()
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<RegisterStudentFormValues>({
     resolver: zodResolver(registerStudentSchema),
+    defaultValues: { gender: 'Male', academicYear: 1 },
   })
 
-  async function onSubmit() {
-    // No registration endpoint yet — the form is validated and wired for the
-    // real call to be dropped in without touching this page's layout again.
-    await new Promise((resolve) => setTimeout(resolve, 600))
-    toast.success('Account created. Sign in to continue.')
-    navigate(ROUTES.login, { replace: true })
+  function onSubmit(values: RegisterStudentFormValues) {
+    registerStudent.mutate(
+      {
+        registrationNumber: values.registrationNumber,
+        fullName: values.fullName,
+        dateOfBirth: values.dateOfBirth,
+        gender: values.gender,
+        faculty: values.faculty,
+        department: values.department,
+        academicYear: values.academicYear,
+        email: values.email,
+        password: values.password,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Account created. An admin must approve it before you can sign in.')
+          navigate(ROUTES.pendingApproval, { replace: true })
+        },
+        // A duplicate registration number/email lands here as a 409.
+        onError: (error) => toast.error(getApiErrorMessage(error)),
+      },
+    )
   }
 
   return (
@@ -108,6 +129,137 @@ export function RegisterStudentPage() {
             </p>
 
             <form noValidate onSubmit={handleSubmit(onSubmit)} className="mt-6 flex flex-col gap-5">
+              {/* Registration number & full name */}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="registrationNumber" className="text-[11px] font-bold uppercase tracking-wider text-foreground/80">
+                    Registration Number
+                  </Label>
+                  <Input
+                    id="registrationNumber"
+                    autoFocus
+                    placeholder="2023/CS/045"
+                    aria-invalid={!!errors.registrationNumber}
+                    className="h-12 rounded-xl border-0 bg-muted px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    {...register('registrationNumber')}
+                  />
+                  {errors.registrationNumber && (
+                    <p role="alert" className="text-xs font-medium text-destructive">
+                      {errors.registrationNumber.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="fullName" className="text-[11px] font-bold uppercase tracking-wider text-foreground/80">
+                    Full Name
+                  </Label>
+                  <Input
+                    id="fullName"
+                    aria-invalid={!!errors.fullName}
+                    className="h-12 rounded-xl border-0 bg-muted px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    {...register('fullName')}
+                  />
+                  {errors.fullName && (
+                    <p role="alert" className="text-xs font-medium text-destructive">
+                      {errors.fullName.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Date of birth & gender */}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="dateOfBirth" className="text-[11px] font-bold uppercase tracking-wider text-foreground/80">
+                    Date of Birth
+                  </Label>
+                  <Input
+                    id="dateOfBirth"
+                    type="date"
+                    aria-invalid={!!errors.dateOfBirth}
+                    className="h-12 rounded-xl border-0 bg-muted px-4 text-sm font-medium text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    {...register('dateOfBirth')}
+                  />
+                  {errors.dateOfBirth && (
+                    <p role="alert" className="text-xs font-medium text-destructive">
+                      {errors.dateOfBirth.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="gender" className="text-[11px] font-bold uppercase tracking-wider text-foreground/80">
+                    Gender
+                  </Label>
+                  <select
+                    id="gender"
+                    className="h-12 rounded-xl border-0 bg-muted px-4 text-sm font-medium text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    {...register('gender')}
+                  >
+                    {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Faculty & department */}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="faculty" className="text-[11px] font-bold uppercase tracking-wider text-foreground/80">
+                    Faculty
+                  </Label>
+                  <Input
+                    id="faculty"
+                    aria-invalid={!!errors.faculty}
+                    className="h-12 rounded-xl border-0 bg-muted px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    {...register('faculty')}
+                  />
+                  {errors.faculty && (
+                    <p role="alert" className="text-xs font-medium text-destructive">
+                      {errors.faculty.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="department" className="text-[11px] font-bold uppercase tracking-wider text-foreground/80">
+                    Department
+                  </Label>
+                  <Input
+                    id="department"
+                    aria-invalid={!!errors.department}
+                    className="h-12 rounded-xl border-0 bg-muted px-4 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    {...register('department')}
+                  />
+                  {errors.department && (
+                    <p role="alert" className="text-xs font-medium text-destructive">
+                      {errors.department.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Academic year */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="academicYear" className="text-[11px] font-bold uppercase tracking-wider text-foreground/80">
+                  Academic Year
+                </Label>
+                <Input
+                  id="academicYear"
+                  type="number"
+                  min={1}
+                  max={6}
+                  aria-invalid={!!errors.academicYear}
+                  className="h-12 rounded-xl border-0 bg-muted px-4 text-sm font-medium text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                  {...register('academicYear', { valueAsNumber: true })}
+                />
+                {errors.academicYear && (
+                  <p role="alert" className="text-xs font-medium text-destructive">
+                    {errors.academicYear.message}
+                  </p>
+                )}
+              </div>
+
               {/* University email */}
               <div className="flex flex-col gap-1.5">
                 <Label
@@ -125,7 +277,6 @@ export function RegisterStudentPage() {
                     id="email"
                     type="email"
                     autoComplete="username"
-                    autoFocus
                     placeholder={`email@${UNIVERSITY_DOMAIN}`}
                     aria-invalid={!!errors.email}
                     aria-describedby={errors.email ? 'email-error' : 'email-hint'}
@@ -232,10 +383,10 @@ export function RegisterStudentPage() {
 
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={registerStudent.isPending}
                 className="h-12 w-full rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow-md hover:bg-primary/90 active:scale-[0.99] transition-all mt-1"
               >
-                {isSubmitting ? (
+                {registerStudent.isPending ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="size-4 animate-spin" /> Creating account...
                   </span>
