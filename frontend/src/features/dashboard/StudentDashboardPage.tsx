@@ -39,6 +39,9 @@ export function StudentDashboardPage() {
   const doneCount = checklist.filter((c) => c.done).length
   const progressPct = Math.round((doneCount / checklist.length) * 100)
 
+  const needsAction = !profile || profile.status === 'Draft' || profile.status === 'Rejected'
+  const awaitingReview = profile?.status === 'SubmittedForVerification'
+
   return (
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-6">
@@ -47,6 +50,28 @@ export function StudentDashboardPage() {
           {student ? `${student.department} · Year ${student.academicYear}` : 'Welcome to UniCare'}
         </p>
       </div>
+
+      {needsAction && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <div>
+            <p className="text-sm font-semibold">Finish your registration</p>
+            <p className="text-sm text-muted-foreground">
+              {profile?.status === 'Rejected'
+                ? 'Staff requested changes to your medical profile — see details and resubmit.'
+                : 'Upload your medical report and complete your medical profile before you can book appointments.'}
+            </p>
+          </div>
+          <Button asChild size="sm">
+            <Link to="/student/medical-profile">Complete profile</Link>
+          </Button>
+        </div>
+      )}
+
+      {awaitingReview && (
+        <div className="mb-5 rounded-xl border border-border bg-muted/40 p-4">
+          <p className="text-sm">Your medical profile is submitted and awaiting review by medical centre staff.</p>
+        </div>
+      )}
 
       <div className="mb-5 grid gap-4 lg:grid-cols-2">
         <Card>
@@ -105,9 +130,11 @@ export function StudentDashboardPage() {
             <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
               <div className="h-full rounded-full bg-primary" style={{ width: `${progressPct}%` }} />
             </div>
-            <span className="inline-flex h-8 items-center rounded-md bg-secondary px-3 text-sm font-medium text-secondary-foreground opacity-50">
-              Complete profile (coming soon)
-            </span>
+            <Button asChild size="sm" variant="secondary">
+              <Link to="/student/medical-profile">
+                {profile ? 'View profile' : 'Complete profile'}
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -123,15 +150,15 @@ export function StudentDashboardPage() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 opacity-50">
+        <Link to="/student/documents" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted/50">
           <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
             <FileText className="size-[18px] text-primary" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold">Upload document</span>
-            <span className="text-xs text-muted-foreground">Coming soon</span>
+            <span className="text-xs text-muted-foreground">Hospital or lab report</span>
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 opacity-50">
           <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
