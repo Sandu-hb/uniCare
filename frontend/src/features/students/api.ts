@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api-client'
 import type { PagedResult } from '@/types/api'
-import type { CreateStudentRequest, Student } from './types'
+import type { CreateStudentRequest, RegisterStudentRequest, Student } from './types'
 
 export interface SearchStudentsParams {
   search?: string
@@ -28,5 +28,11 @@ export async function getMe(): Promise<Student> {
 
 export async function createStudent(request: CreateStudentRequest): Promise<Student> {
   const { data } = await apiClient.post<Student>('/students', request)
+  return data
+}
+
+/** Self-service registration. The resulting account starts PendingApproval. */
+export async function registerStudent(request: RegisterStudentRequest): Promise<Student> {
+  const { data } = await apiClient.post<Student>('/students/register', request)
   return data
 }
