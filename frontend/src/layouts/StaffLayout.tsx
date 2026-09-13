@@ -1,14 +1,21 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
+import { ROLES } from '@/config/roles'
+import { useAuth } from '@/features/auth/auth-context'
 
-// TODO(auth): show only the sections the signed-in role may use, via useAuth().hasRole.
+// TODO(auth): the non-admin-only links below still show to every staff role —
+// only the admin-only one is filtered so far.
 const links = [
   { to: '/students', label: 'Students' },
   { to: '/staff/appointments', label: 'Appointments' },
+  { to: '/staff/student-accounts', label: 'Student approvals', roles: [ROLES.Admin] },
   { to: '/system-status', label: 'System status' },
 ]
 
 export function StaffLayout() {
+  const { hasRole } = useAuth()
+  const visibleLinks = links.filter((link) => !link.roles || hasRole(...link.roles))
+
   return (
     <div className="flex min-h-svh bg-background">
       <aside className="flex w-56 shrink-0 flex-col border-r border-border p-4">
@@ -16,7 +23,7 @@ export function StaffLayout() {
           <p className="text-sm font-semibold">UniCare</p>
         </div>
         <nav className="flex flex-col gap-1">
-          {links.map(({ to, label }) => (
+          {visibleLinks.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}
