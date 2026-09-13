@@ -35,3 +35,8 @@ export interface CreateStudentRequest {
   emergencyContactName?: string | null
   emergencyContactNumber?: string | null
 }
+
+/** Mirrors RegisterStudentRequest — CreateStudentRequest plus a password. */
+export interface RegisterStudentRequest extends CreateStudentRequest {
+  password: string
+}
