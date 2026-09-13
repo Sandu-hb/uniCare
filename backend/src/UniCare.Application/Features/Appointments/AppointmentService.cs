@@ -79,6 +79,17 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
             throw new NotFoundException(nameof(Student), studentId);
         }
 
+        var profileStatus = await db.MedicalProfiles
+            .Where(p => p.StudentId == studentId)
+            .Select(p => (VerificationStatus?)p.Status)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (profileStatus != VerificationStatus.Verified)
+        {
+            throw new ConflictException(
+                "Your medical profile must be verified before you can book an appointment.");
+        }
+
         var appointment = new Appointment
         {
             StudentId = studentId,
