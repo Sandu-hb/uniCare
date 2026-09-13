@@ -62,12 +62,17 @@ export function AppRouter() {
         </Route>
       </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={[ROLES.Student]} />}>
+      {/* allowPending: a newly-registered student IS PendingApproval and must
+          reach Medical Profile/Documents to ever get verified. The real gate
+          (e.g. blocking appointment booking) is enforced server-side; these
+          pages themselves show the right state for a pending account. */}
+      <Route element={<ProtectedRoute allowedRoles={[ROLES.Student]} allowPending />}>
         <Route element={<StudentLayout />}>
           <Route path={ROUTES.student.dashboard} element={<StudentDashboardPage />} />
           <Route path={ROUTES.student.appointments} element={<StudentAppointmentsPage />} />
-          {/* TODO: medical profile, documents, prescriptions, reports — needs dedicated
-              student-facing routes under StudentLayout; the existing pages are staff-gated. */}
+          <Route path={ROUTES.student.medicalProfile} element={<MedicalProfilePage />} />
+          <Route path={ROUTES.student.documents} element={<DocumentsPage />} />
+          {/* TODO: prescriptions, reports */}
         </Route>
       </Route>
 
