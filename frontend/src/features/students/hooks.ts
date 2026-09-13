@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createStudent, getMe, getStudent, searchStudents, type SearchStudentsParams } from './api'
-import type { CreateStudentRequest } from './types'
+import {
+  createStudent, getMe, getStudent, registerStudent, searchStudents, type SearchStudentsParams,
+} from './api'
+import type { CreateStudentRequest, RegisterStudentRequest } from './types'
 
 /**
  * Query keys in one place. Every key starts with 'students', so invalidating
@@ -50,5 +52,15 @@ export function useCreateStudent() {
       // it, mark every students query stale and let TanStack refetch.
       void queryClient.invalidateQueries({ queryKey: studentKeys.all })
     },
+  })
+}
+
+/**
+ * Self-registration happens while signed out, so there is no cache to update —
+ * the account is PendingApproval anyway and cannot fetch anything yet.
+ */
+export function useRegisterStudent() {
+  return useMutation({
+    mutationFn: (request: RegisterStudentRequest) => registerStudent(request),
   })
 }
