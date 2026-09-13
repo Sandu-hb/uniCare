@@ -6,6 +6,7 @@ using UniCare.Application.Contracts;
 using UniCare.Application.Features.Students;
 using UniCare.Application.Features.Students.Dtos;
 using UniCare.Domain.Constants;
+using UniCare.Domain.Enums;
 
 namespace UniCare.Api.Controllers;
 
@@ -38,13 +39,26 @@ public class StudentsController(
 
     [HttpPost("{id:guid}/activate")]
     [Authorize(Roles = AppRoles.Admin)]
-    public async Task<ActionResult<StudentDto>> Activate(Guid id, CancellationToken cancellationToken) =>
+    public async Task<ActionResult<StudentAccountDto>> Activate(Guid id, CancellationToken cancellationToken) =>
         Ok(await studentAccountService.ActivateAsync(id, cancellationToken));
 
     [HttpPost("{id:guid}/suspend")]
     [Authorize(Roles = AppRoles.Admin)]
-    public async Task<ActionResult<StudentDto>> Suspend(Guid id, CancellationToken cancellationToken) =>
+    public async Task<ActionResult<StudentAccountDto>> Suspend(Guid id, CancellationToken cancellationToken) =>
         Ok(await studentAccountService.SuspendAsync(id, cancellationToken));
+
+    /// <summary>Admin-only: the approval queue, filterable by status and name/registration number.</summary>
+    [HttpGet("accounts")]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<ActionResult<PagedResult<StudentAccountDto>>> SearchAccounts(
+        [FromQuery] AccountStatus? status,
+        [FromQuery] string? search,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        return Ok(await studentAccountService.SearchAsync(status, search, page, pageSize, cancellationToken));
+    }
 
     [HttpGet("me")]
     [Authorize]
