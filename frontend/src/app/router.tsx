@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { DashboardPlaceholder } from '@/components/common/DashboardPlaceholder'
 import { ROLES, STAFF_ROLES } from '@/config/roles'
 import { ROUTES } from '@/config/routes'
 import { StaffAppointmentsPage } from '@/features/appointments/StaffAppointmentsPage'
@@ -11,10 +10,13 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { PendingApprovalPage } from '@/features/auth/PendingApprovalPage'
 import { RegisterStaffPage } from '@/features/auth/RegisterStaffPage'
 import { RegisterStudentPage } from '@/features/auth/RegisterStudentPage'
+import { StaffDashboardPage } from '@/features/dashboard/StaffDashboardPage'
+import { StudentDashboardPage } from '@/features/dashboard/StudentDashboardPage'
 import { MedicalProfilePage } from '@/features/medical-profiles/MedicalProfilePage'
 import { StudentAccountsPage } from '@/features/students/StudentAccountsPage'
 import { StudentsPage } from '@/features/students/StudentsPage'
 import { SystemStatusPage } from '@/features/system/SystemStatusPage'
+import { QueuePage } from '@/features/visits/QueuePage'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { StaffLayout } from '@/layouts/StaffLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
@@ -45,13 +47,14 @@ export function AppRouter() {
 
       <Route element={<ProtectedRoute allowedRoles={STAFF_ROLES} />}>
         <Route element={<StaffLayout />}>
-          <Route path={ROUTES.staff.dashboard} element={<DashboardPlaceholder title="Staff dashboard" />} />
+          <Route path={ROUTES.staff.dashboard} element={<StaffDashboardPage />} />
           <Route path={ROUTES.systemStatus} element={<SystemStatusPage />} />
           <Route path="/students/:studentId/documents" element={<DocumentsPage />} />
           {/* StudentsPage/MedicalProfilePage link to these exact paths directly, not via ROUTES.staff.students */}
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
           <Route path={ROUTES.staff.appointments} element={<StaffAppointmentsPage />} />
+          <Route path={ROUTES.staff.queue} element={<QueuePage />} />
 
           <Route element={<ProtectedRoute allowedRoles={[ROLES.Admin]} />}>
             <Route path={ROUTES.staff.studentAccounts} element={<StudentAccountsPage />} />
@@ -61,12 +64,10 @@ export function AppRouter() {
 
       <Route element={<ProtectedRoute allowedRoles={[ROLES.Student]} />}>
         <Route element={<StudentLayout />}>
-          <Route
-            path={ROUTES.student.dashboard}
-            element={<DashboardPlaceholder title="Student dashboard" />}
-          />
+          <Route path={ROUTES.student.dashboard} element={<StudentDashboardPage />} />
           <Route path={ROUTES.student.appointments} element={<StudentAppointmentsPage />} />
-          {/* TODO: medical profile, documents, prescriptions, reports */}
+          {/* TODO: medical profile, documents, prescriptions, reports — needs dedicated
+              student-facing routes under StudentLayout; the existing pages are staff-gated. */}
         </Route>
       </Route>
 
