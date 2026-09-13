@@ -1,4 +1,6 @@
+using UniCare.Application.Contracts;
 using UniCare.Application.Features.Students.Dtos;
+using UniCare.Domain.Enums;
 
 namespace UniCare.Application.Features.Students;
 
@@ -15,9 +17,14 @@ public interface IStudentAccountService
     /// </exception>
     Task<StudentDto> RegisterAsync(RegisterStudentRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Admin-only: the approval queue, optionally filtered by status and name/registration number.</summary>
+    Task<PagedResult<StudentAccountDto>> SearchAsync(
+        AccountStatus? status, string? search, int page, int pageSize,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Valid from PendingApproval or Suspended only.</summary>
-    Task<StudentDto> ActivateAsync(Guid studentId, CancellationToken cancellationToken = default);
+    Task<StudentAccountDto> ActivateAsync(Guid studentId, CancellationToken cancellationToken = default);
 
     /// <summary>Valid from Active or PendingApproval only. Also revokes the refresh token.</summary>
-    Task<StudentDto> SuspendAsync(Guid studentId, CancellationToken cancellationToken = default);
+    Task<StudentAccountDto> SuspendAsync(Guid studentId, CancellationToken cancellationToken = default);
 }
