@@ -10,6 +10,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/features/auth/auth-context'
+import { useMyStudent } from '@/features/students/hooks'
 import { getApiErrorMessage } from '@/lib/api-client'
 import {
     useMedicalProfile, useRejectMedicalProfile,
@@ -27,7 +29,15 @@ function statusVariant(status: VerificationStatus) {
 }
 
 export function MedicalProfilePage() {
-    const { studentId = '' } = useParams()
+    const { studentId: routeStudentId } = useParams()
+    const { hasRole } = useAuth()
+    const isOwnView = !routeStudentId
+    // Own-view (the student's own /student/medical-profile route) has no
+    // :studentId param, so resolve it from the JWT instead. Harmless to call
+    // even in staff-view — the result is simply unused there.
+    const { data: myStudent } = useMyStudent()
+    const studentId = routeStudentId ?? myStudent?.id ?? ''
+    const canReview = hasRole('Doctor', 'Nurse', 'Admin')
 
     const { data: profile, isPending, error } = useMedicalProfile(studentId)
     const upsert = useUpsertMedicalProfile(studentId)
@@ -100,10 +110,17 @@ export function MedicalProfilePage() {
     return (
         <div className="mx-auto max-w-3xl p-6">
             <div className="flex items-center justify-between">
-                <Link to="/students" className="text-xs text-muted-foreground hover:underline">
-                    ← Back to students
-                </Link>
-                <Link to={`/students/${studentId}/documents`} className="text-xs text-muted-foreground hover:underline">
+                {isOwnView
+                    ? <span />
+                    : (
+                        <Link to="/students" className="text-xs text-muted-foreground hover:underline">
+                            ← Back to students
+                        </Link>
+                    )}
+                <Link
+                    to={isOwnView ? '/student/documents' : `/students/${studentId}/documents`}
+                    className="text-xs text-muted-foreground hover:underline"
+                >
                     View documents →
                 </Link>
             </div>
@@ -194,7 +211,11 @@ export function MedicalProfilePage() {
                         <CardHeader>
                             <CardTitle className="text-base">Examinations</CardTitle>
                         </CardHeader>
-                        <CardContent className="grid gap-4 sm:grid-cols-2">
+                        <CardContent className="grid gap-4 sm:grid-cols-3">
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="generalExamination">General examination</Label>
+                                <Textarea id="generalExamination" rows={2} {...register('generalExamination')} />
+                            </div>
                             <div className="grid gap-1.5">
                                 <Label htmlFor="eyeExamination">Eye examination</Label>
                                 <Textarea id="eyeExamination" rows={2} {...register('eyeExamination')} />
@@ -202,6 +223,35 @@ export function MedicalProfilePage() {
                             <div className="grid gap-1.5">
                                 <Label htmlFor="dentalExamination">Dental examination</Label>
                                 <Textarea id="dentalExamination" rows={2} {...register('dentalExamination')} />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">Additional health information</CardTitle>
+                            <CardDescription>Helps staff understand your background before your first visit.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 sm:grid-cols-2">
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="vaccinationDetails">Vaccination / immunization history</Label>
+                                <Textarea id="vaccinationDetails" rows={2}
+                                    placeholder="e.g. BCG, MMR, Hepatitis B, COVID-19 — with dates if known"
+                                    {...register('vaccinationDetails')} />
+                            </div>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="familyMedicalHistory">Family medical history</Label>
+                                <Textarea id="familyMedicalHistory" rows={2}
+                                    placeholder="e.g. Diabetes or heart disease in immediate family"
+                                    {...register('familyMedicalHistory')} />
+                            </div>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="pastMedicalHistory">Past illnesses, surgeries or hospitalizations</Label>
+                                <Textarea id="pastMedicalHistory" rows={2} {...register('pastMedicalHistory')} />
+                            </div>
+                            <div className="grid gap-1.5">
+                                <Label htmlFor="disability">Disability or long-term special needs</Label>
+                                <Textarea id="disability" rows={2} {...register('disability')} />
                             </div>
                         </CardContent>
                     </Card>
@@ -220,14 +270,19 @@ export function MedicalProfilePage() {
                         </>
                     )}
 
-                    {/* TODO(auth): staff-only — hide behind hasRole once JWT lands. */}
-                    {awaitingReview && (
+                    {awaitingReview && canReview && (
                         <>
                             <Button type="button" disabled={busy} onClick={onVerify}>Verify</Button>
                             <Button type="button" variant="outline" disabled={busy} onClick={onReject}>
                                 Request changes
                             </Button>
                         </>
+                    )}
+
+                    {awaitingReview && !canReview && (
+                        <p className="text-sm text-muted-foreground">
+                            Submitted — awaiting review by medical centre staff.
+                        </p>
                     )}
 
                     {status === 'Verified' && (
