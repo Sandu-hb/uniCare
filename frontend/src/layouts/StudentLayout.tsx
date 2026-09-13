@@ -48,8 +48,8 @@ export function StudentLayout() {
 
           <nav className="flex items-center gap-1">
             <NavPill to="/student" label="Dashboard" />
-            <NavPill label="Medical Profile" disabled />
-            <NavPill label="Documents" disabled />
+            <NavPill to="/student/medical-profile" label="Medical Profile" />
+            <NavPill to="/student/documents" label="Documents" />
             <NavPill to="/student/appointments" label="Appointments" />
             <NavPill label="Prescriptions" disabled />
           </nav>
