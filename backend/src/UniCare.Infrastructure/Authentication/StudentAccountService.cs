@@ -123,10 +123,21 @@ public class StudentAccountService(
         };
     }
 
+    /// <summary>
+    /// Idempotent: activating an already-Active account is a no-op, not an error.
+    /// This is what lets MedicalProfilesController.Verify call this unconditionally
+    /// right after verifying a profile, without caring whether the student was
+    /// already active from an earlier registration.
+    /// </summary>
     public async Task<StudentAccountDto> ActivateAsync(Guid studentId, CancellationToken cancellationToken = default)
     {
         var student = await LoadAsync(studentId, cancellationToken);
         var user = await FindUserAsync(student, cancellationToken);
+
+        if (user.Status == AccountStatus.Active)
+        {
+            return ToAccountDto(student, user.Status);
+        }
 
         if (!ActivatableStates.Contains(user.Status))
         {
