@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using UniCare.Application.Contracts;
 using UniCare.Application.Exceptions;
 using UniCare.Application.Features.Auth;
 using UniCare.Application.Features.Students;
@@ -83,7 +84,46 @@ public class StudentAccountService(
         return student.ToDto();
     }
 
-    public async Task<StudentDto> ActivateAsync(Guid studentId, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<StudentAccountDto>> SearchAsync(
+        AccountStatus? status, string? search, int page, int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = BaseQuery();
+
+        if (status.HasValue)
+        {
+            query = query.Where(s => s.AccountStatus == status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLowerInvariant();
+            query = query.Where(s =>
+                s.FullName.ToLower().Contains(term) ||
+                s.RegistrationNumber.ToLower().Contains(term));
+        }
+
+        query = query.OrderBy(s => s.FullName);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<StudentAccountDto>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+        };
+    }
+
+    public async Task<StudentAccountDto> ActivateAsync(Guid studentId, CancellationToken cancellationToken = default)
     {
         var student = await LoadAsync(studentId, cancellationToken);
         var user = await FindUserAsync(student, cancellationToken);
@@ -97,10 +137,10 @@ public class StudentAccountService(
         user.Status = AccountStatus.Active;
         await userManager.UpdateAsync(user);
 
-        return student.ToDto();
+        return ToAccountDto(student, user.Status);
     }
 
-    public async Task<StudentDto> SuspendAsync(Guid studentId, CancellationToken cancellationToken = default)
+    public async Task<StudentAccountDto> SuspendAsync(Guid studentId, CancellationToken cancellationToken = default)
     {
         var student = await LoadAsync(studentId, cancellationToken);
         var user = await FindUserAsync(student, cancellationToken);
@@ -118,8 +158,47 @@ public class StudentAccountService(
         // with its existing refresh token until that token's own expiry.
         await authService.RevokeAsync(user.Id, cancellationToken);
 
-        return student.ToDto();
+        return ToAccountDto(student, user.Status);
     }
+
+    private IQueryable<StudentAccountDto> BaseQuery() =>
+        from student in db.Students.AsNoTracking()
+        join user in db.Users.AsNoTracking() on student.ApplicationUserId equals (Guid?)user.Id
+        select new StudentAccountDto
+        {
+            Id = student.Id,
+            RegistrationNumber = student.RegistrationNumber,
+            FullName = student.FullName,
+            DateOfBirth = student.DateOfBirth,
+            Gender = student.Gender,
+            Faculty = student.Faculty,
+            Department = student.Department,
+            AcademicYear = student.AcademicYear,
+            ContactNumber = student.ContactNumber,
+            Email = student.Email,
+            Address = student.Address,
+            EmergencyContactName = student.EmergencyContactName,
+            EmergencyContactNumber = student.EmergencyContactNumber,
+            AccountStatus = user.Status,
+        };
+
+    private static StudentAccountDto ToAccountDto(Student student, AccountStatus status) => new()
+    {
+        Id = student.Id,
+        RegistrationNumber = student.RegistrationNumber,
+        FullName = student.FullName,
+        DateOfBirth = student.DateOfBirth,
+        Gender = student.Gender,
+        Faculty = student.Faculty,
+        Department = student.Department,
+        AcademicYear = student.AcademicYear,
+        ContactNumber = student.ContactNumber,
+        Email = student.Email,
+        Address = student.Address,
+        EmergencyContactName = student.EmergencyContactName,
+        EmergencyContactNumber = student.EmergencyContactNumber,
+        AccountStatus = status,
+    };
 
     private async Task<Student> LoadAsync(Guid studentId, CancellationToken cancellationToken) =>
         await db.Students.FirstOrDefaultAsync(s => s.Id == studentId, cancellationToken)
