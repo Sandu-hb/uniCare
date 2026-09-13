@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using UniCare.Application.Contracts;
 using UniCare.Application.Features.Students;
 using UniCare.Application.Features.Students.Dtos;
+using UniCare.Domain.Constants;
 
 namespace UniCare.Api.Controllers;
 
@@ -12,8 +13,39 @@ namespace UniCare.Api.Controllers;
 [Route("api/[controller]")]
 public class StudentsController(
     IStudentService studentService,
-    IValidator<CreateStudentRequest> createValidator) : ControllerBase
+    IStudentAccountService studentAccountService,
+    IValidator<CreateStudentRequest> createValidator,
+    IValidator<RegisterStudentRequest> registerValidator) : ControllerBase
 {
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<ActionResult<StudentDto>> Register(
+        RegisterStudentRequest request, CancellationToken cancellationToken)
+    {
+        var validation = await registerValidator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+            {
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            }
+            return ValidationProblem(ModelState);
+        }
+
+        var created = await studentAccountService.RegisterAsync(request, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+    }
+
+    [HttpPost("{id:guid}/activate")]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<ActionResult<StudentDto>> Activate(Guid id, CancellationToken cancellationToken) =>
+        Ok(await studentAccountService.ActivateAsync(id, cancellationToken));
+
+    [HttpPost("{id:guid}/suspend")]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<ActionResult<StudentDto>> Suspend(Guid id, CancellationToken cancellationToken) =>
+        Ok(await studentAccountService.SuspendAsync(id, cancellationToken));
+
     [HttpGet("me")]
     [Authorize]
     public async Task<ActionResult<StudentDto>> GetMe(CancellationToken cancellationToken)
