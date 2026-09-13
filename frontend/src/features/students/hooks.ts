@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  createStudent, getMe, getStudent, registerStudent, searchStudents, type SearchStudentsParams,
+  activateStudent, createStudent, getMe, getStudent, registerStudent, searchStudentAccounts,
+  searchStudents, suspendStudent, type SearchStudentAccountsParams, type SearchStudentsParams,
 } from './api'
 import type { CreateStudentRequest, RegisterStudentRequest } from './types'
 
@@ -13,6 +14,7 @@ export const studentKeys = {
   me: ['students', 'me'] as const,
   list: (params: SearchStudentsParams) => [...studentKeys.all, 'list', params] as const,
   detail: (id: string) => [...studentKeys.all, 'detail', id] as const,
+  accounts: (params: SearchStudentAccountsParams) => [...studentKeys.all, 'accounts', params] as const,
 }
 
 export function useStudents(params: SearchStudentsParams) {
@@ -63,4 +65,31 @@ export function useRegisterStudent() {
   return useMutation({
     mutationFn: (request: RegisterStudentRequest) => registerStudent(request),
   })
+}
+
+export function useStudentAccounts(params: SearchStudentAccountsParams) {
+  return useQuery({
+    queryKey: studentKeys.accounts(params),
+    queryFn: () => searchStudentAccounts(params),
+    placeholderData: (previous) => previous,
+  })
+}
+
+function useAccountMutation(fn: (id: string) => ReturnType<typeof activateStudent>) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: studentKeys.all })
+    },
+  })
+}
+
+export function useActivateStudent() {
+  return useAccountMutation(activateStudent)
+}
+
+export function useSuspendStudent() {
+  return useAccountMutation(suspendStudent)
 }
