@@ -133,6 +133,15 @@ public class VisitService(IApplicationDbContext db) : IVisitService
         switch (queueEntry.Stage)
         {
             case QueueStage.Nurse:
+                // The clinical record has to exist before the patient moves on —
+                // otherwise the doctor receives a patient with no vitals and the
+                // visit history has a hole in it.
+                if (!await db.VitalSigns.AnyAsync(v => v.MedicalVisitId == id, cancellationToken))
+                {
+                    throw new ConflictException(
+                        "Record vitals before sending this patient to the doctor.");
+                }
+
                 queueEntry.Stage = QueueStage.Doctor;
                 queueEntry.CalledAt = null;
                 queueEntry.EnteredAt = now;
@@ -140,6 +149,12 @@ public class VisitService(IApplicationDbContext db) : IVisitService
                 break;
 
             case QueueStage.Doctor:
+                if (!await db.Consultations.AnyAsync(c => c.MedicalVisitId == id, cancellationToken))
+                {
+                    throw new ConflictException(
+                        "Record the consultation before completing this visit.");
+                }
+
                 queueEntry.CompletedAt = now;
                 visit.Status = VisitStatus.Completed;
                 visit.CompletedAt = now;
