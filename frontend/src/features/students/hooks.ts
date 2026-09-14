@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createStudent, getMe, getStudent, searchStudents, type SearchStudentsParams } from './api'
-import type { CreateStudentRequest } from './types'
+import {
+  activateStudent, createStudent, getMe, getStudent, registerStudent, searchStudentAccounts,
+  searchStudents, suspendStudent, type SearchStudentAccountsParams, type SearchStudentsParams,
+} from './api'
+import type { CreateStudentRequest, RegisterStudentRequest } from './types'
 
 /**
  * Query keys in one place. Every key starts with 'students', so invalidating
@@ -11,6 +14,7 @@ export const studentKeys = {
   me: ['students', 'me'] as const,
   list: (params: SearchStudentsParams) => [...studentKeys.all, 'list', params] as const,
   detail: (id: string) => [...studentKeys.all, 'detail', id] as const,
+  accounts: (params: SearchStudentAccountsParams) => [...studentKeys.all, 'accounts', params] as const,
 }
 
 export function useStudents(params: SearchStudentsParams) {
@@ -51,4 +55,46 @@ export function useCreateStudent() {
       void queryClient.invalidateQueries({ queryKey: studentKeys.all })
     },
   })
+}
+
+/**
+ * Self-registration happens while signed out, so there is no cache to update —
+ * the account is PendingApproval anyway and cannot fetch anything yet.
+ */
+export function useRegisterStudent() {
+  return useMutation({
+    mutationFn: (request: RegisterStudentRequest) => registerStudent(request),
+  })
+}
+
+/**
+ * Admin-only on the server — pass enabled: false for a non-admin viewer so this
+ * never fires a request that can only come back 403.
+ */
+export function useStudentAccounts(params: SearchStudentAccountsParams, enabled = true) {
+  return useQuery({
+    queryKey: studentKeys.accounts(params),
+    queryFn: () => searchStudentAccounts(params),
+    placeholderData: (previous) => previous,
+    enabled,
+  })
+}
+
+function useAccountMutation(fn: (id: string) => ReturnType<typeof activateStudent>) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: studentKeys.all })
+    },
+  })
+}
+
+export function useActivateStudent() {
+  return useAccountMutation(activateStudent)
+}
+
+export function useSuspendStudent() {
+  return useAccountMutation(suspendStudent)
 }

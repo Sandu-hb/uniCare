@@ -26,8 +26,17 @@ export const loginSchema = z.object({
 
 export type LoginFormValues = z.infer<typeof loginSchema>
 
+/** Mirrors RegisterStudentRequestValidator on the server. */
 export const registerStudentSchema = z
   .object({
+    registrationNumber: z.string().min(1, 'Required').max(32)
+      .regex(/^[A-Za-z0-9/-]+$/, 'Letters, digits, hyphens and slashes only'),
+    fullName: z.string().min(1, 'Required').max(256),
+    dateOfBirth: z.string().min(1, 'Required'),
+    gender: z.enum(['Male', 'Female', 'Other']),
+    faculty: z.string().min(1, 'Required').max(256),
+    department: z.string().min(1, 'Required').max(256),
+    academicYear: z.number().int().min(1, '1 to 6').max(6, '1 to 6'),
     email: z
       .string()
       .min(1, 'Enter your university email address.')

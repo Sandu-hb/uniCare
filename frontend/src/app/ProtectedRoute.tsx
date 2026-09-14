@@ -7,6 +7,15 @@ import { useAuth } from '@/features/auth/auth-context'
 interface ProtectedRouteProps {
   /** If omitted, any signed-in, approved user may enter. */
   allowedRoles?: Role[]
+  /**
+   * Lets a PendingApproval user through instead of bouncing to the waiting
+   * page. Needed for the student onboarding routes (medical profile,
+   * documents) — a newly-registered student IS PendingApproval, and has to
+   * reach those pages to ever get verified in the first place. The real
+   * enforcement (e.g. blocking appointment booking) still happens server-side
+   * regardless of this flag — see the class doc below.
+   */
+  allowPending?: boolean
 }
 
 /**
@@ -17,7 +26,7 @@ interface ProtectedRouteProps {
  * the browser renders. Every endpoint must independently enforce
  * authorization on the server, because anyone can edit client-side state.
  */
-export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
+export function ProtectedRoute({ allowedRoles, allowPending }: ProtectedRouteProps) {
   const { status, user, hasRole } = useAuth()
   const location = useLocation()
 
@@ -30,7 +39,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
     return <Navigate to={ROUTES.login} state={{ from: location }} replace />
   }
 
-  if (user.status === 'PendingApproval') {
+  if (user.status === 'PendingApproval' && !allowPending) {
     return <Navigate to={ROUTES.pendingApproval} replace />
   }
 

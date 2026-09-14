@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useMyStudent } from '@/features/students/hooks'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { UploadDocumentDialog } from './components/UploadDocumentDialog'
 import { useDocuments } from './hooks'
@@ -16,11 +17,20 @@ function formatSize(bytes: number): string {
 }
 
 export function DocumentsPage() {
-  const { studentId = '' } = useParams()
+  const { studentId: routeStudentId } = useParams()
+  const isOwnView = !routeStudentId
+  const { data: myStudent } = useMyStudent()
+  const studentId = routeStudentId ?? myStudent?.id ?? ''
+
   const { data: documents, isPending, error } = useDocuments(studentId)
 
   return (
     <div className="mx-auto max-w-3xl p-6">
+      {isOwnView && (
+        <Link to="/student/medical-profile" className="mb-3 inline-block text-xs text-muted-foreground hover:underline">
+          ← Medical profile
+        </Link>
+      )}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Medical documents</h1>
@@ -28,7 +38,7 @@ export function DocumentsPage() {
             Hospital-verified documents for AI-assisted record extraction.
           </p>
         </div>
-        <UploadDocumentDialog studentId={studentId} />
+        {studentId && <UploadDocumentDialog studentId={studentId} />}
       </div>
 
       {error && (

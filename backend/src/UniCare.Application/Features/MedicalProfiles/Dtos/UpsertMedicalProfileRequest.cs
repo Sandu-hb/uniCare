@@ -17,4 +17,9 @@ public record UpsertMedicalProfileRequest
     public string? CurrentMedications { get; init; }
     public string? EyeExamination { get; init; }
     public string? DentalExamination { get; init; }
+    public string? GeneralExamination { get; init; }
+    public string? VaccinationDetails { get; init; }
+    public string? FamilyMedicalHistory { get; init; }
+    public string? PastMedicalHistory { get; init; }
+    public string? Disability { get; init; }
 }

@@ -19,6 +19,7 @@ namespace UniCare.Api.Controllers;
 public class MedicalProfilesController(
     IMedicalProfileService profileService,
     IStudentService studentService,
+    IStudentAccountService studentAccountService,
     IValidator<UpsertMedicalProfileRequest> upsertValidator,
     IValidator<RejectMedicalProfileRequest> rejectValidator) : ControllerBase
 {
@@ -82,12 +83,19 @@ public class MedicalProfilesController(
         return Ok(await profileService.SubmitAsync(studentId, cancellationToken));
     }
 
+    /// <summary>
+    /// Verifying the medical profile is what "registers" the student — it also
+    /// activates their account, so one reviewer decision does both. Activation is
+    /// idempotent, so this is safe even if the account was already Active.
+    /// </summary>
     [HttpPost("verify")]
     [Authorize(Roles = ReviewerRoles)]
     public async Task<ActionResult<MedicalProfileDto>> Verify(
         Guid studentId, CancellationToken cancellationToken)
     {
-        return Ok(await profileService.VerifyAsync(studentId, CurrentApplicationUserId, cancellationToken));
+        var verified = await profileService.VerifyAsync(studentId, CurrentApplicationUserId, cancellationToken);
+        await studentAccountService.ActivateAsync(studentId, cancellationToken);
+        return Ok(verified);
     }
 
     [HttpPost("reject")]

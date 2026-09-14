@@ -14,7 +14,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 }
 
 /** Mirrors UniCare.Domain.Enums.DocumentStatus. */
-export type DocumentStatus = 'Uploaded' | 'Processing' | 'Extracted' | 'Failed'
+export type DocumentStatus = 'Uploaded'
 
 /** Mirrors MedicalDocumentDto. */
 export interface MedicalDocument {

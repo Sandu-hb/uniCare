@@ -21,6 +21,11 @@ public class MedicalProfile : AuditableEntity
     public string? CurrentMedications { get; set; }
     public string? EyeExamination { get; set; }
     public string? DentalExamination { get; set; }
+    public string? GeneralExamination { get; set; }
+    public string? VaccinationDetails { get; set; }
+    public string? FamilyMedicalHistory { get; set; }
+    public string? PastMedicalHistory { get; set; }
+    public string? Disability { get; set; }
 
     public VerificationStatus Status { get; set; } = VerificationStatus.Draft;
     public DateTimeOffset? SubmittedAt { get; set; }

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -5,6 +6,7 @@ import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useMedicalProfile } from '@/features/medical-profiles/hooks'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { useMyStudent } from '@/features/students/hooks'
 import { BookAppointmentDialog } from './components/BookAppointmentDialog'
@@ -22,7 +24,9 @@ export function StudentAppointmentsPage() {
   const studentId = student?.id ?? ''
 
   const { data: appointments, isPending, error } = useMyAppointments(studentId)
+  const { data: profile } = useMedicalProfile(studentId)
   const cancel = useCancelAppointment()
+  const canBook = profile?.status === 'Verified'
 
   function onCancel(id: string) {
     cancel.mutate(id, {
@@ -40,13 +44,25 @@ export function StudentAppointmentsPage() {
             Request a slot; a staff member will approve or decline it.
           </p>
         </div>
-        {studentId && <BookAppointmentDialog studentId={studentId} />}
+        {studentId && canBook && <BookAppointmentDialog studentId={studentId} />}
       </div>
 
       {error && (
         <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {getApiErrorMessage(error)}
         </p>
+      )}
+
+      {studentId && !canBook && (
+        <div className="mb-4 rounded-xl border border-border bg-muted/40 p-4">
+          <p className="text-sm font-medium">Your medical profile must be verified before you can book.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Upload your medical report and complete your profile, then wait for staff to review it.
+          </p>
+          <Button asChild size="sm" variant="secondary" className="mt-3">
+            <Link to="/student/medical-profile">Go to medical profile</Link>
+          </Button>
+        </div>
       )}
 
       <Card>

@@ -15,6 +15,11 @@ public record MedicalProfileDto
     public string? CurrentMedications { get; init; }
     public string? EyeExamination { get; init; }
     public string? DentalExamination { get; init; }
+    public string? GeneralExamination { get; init; }
+    public string? VaccinationDetails { get; init; }
+    public string? FamilyMedicalHistory { get; init; }
+    public string? PastMedicalHistory { get; init; }
+    public string? Disability { get; init; }
 
     public required VerificationStatus Status { get; init; }
     public DateTimeOffset? SubmittedAt { get; init; }

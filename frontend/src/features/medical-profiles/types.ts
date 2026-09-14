@@ -42,6 +42,11 @@ export interface MedicalProfile {
   currentMedications: string | null
   eyeExamination: string | null
   dentalExamination: string | null
+  generalExamination: string | null
+  vaccinationDetails: string | null
+  familyMedicalHistory: string | null
+  pastMedicalHistory: string | null
+  disability: string | null
   status: VerificationStatus
   submittedAt: string | null
   verifiedAt: string | null
@@ -57,4 +62,9 @@ export interface UpsertMedicalProfileRequest {
   currentMedications?: string | null
   eyeExamination?: string | null
   dentalExamination?: string | null
+  generalExamination?: string | null
+  vaccinationDetails?: string | null
+  familyMedicalHistory?: string | null
+  pastMedicalHistory?: string | null
+  disability?: string | null
 }

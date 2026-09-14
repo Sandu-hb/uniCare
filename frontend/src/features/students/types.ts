@@ -1,3 +1,5 @@
+import type { AccountStatus } from '@/features/auth/types'
+
 /** Mirrors UniCare.Domain.Enums.Gender, serialized as text by the API. */
 export type Gender = 'Unspecified' | 'Male' | 'Female' | 'Other'
 
@@ -34,4 +36,14 @@ export interface CreateStudentRequest {
   address?: string | null
   emergencyContactName?: string | null
   emergencyContactNumber?: string | null
+}
+
+/** Mirrors RegisterStudentRequest — CreateStudentRequest plus a password. */
+export interface RegisterStudentRequest extends CreateStudentRequest {
+  password: string
+}
+
+/** Mirrors StudentAccountDto — Student plus the linked sign-in account's status. */
+export interface StudentAccount extends Student {
+  accountStatus: AccountStatus
 }

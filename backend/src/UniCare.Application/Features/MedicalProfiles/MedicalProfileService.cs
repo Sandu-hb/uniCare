@@ -84,6 +84,13 @@ public class MedicalProfileService(IApplicationDbContext db) : IMedicalProfileSe
                 $"Only a draft or rejected profile can be submitted; this one is {profile.Status}.");
         }
 
+        var hasDocument = await db.MedicalDocuments.AnyAsync(d => d.StudentId == studentId, cancellationToken);
+        if (!hasDocument)
+        {
+            throw new ConflictException(
+                "Upload at least one medical document before submitting your profile for verification.");
+        }
+
         profile.Status = VerificationStatus.SubmittedForVerification;
         profile.SubmittedAt = DateTimeOffset.UtcNow;
         profile.RejectionReason = null;
@@ -165,5 +172,10 @@ public class MedicalProfileService(IApplicationDbContext db) : IMedicalProfileSe
         profile.CurrentMedications = request.CurrentMedications?.Trim();
         profile.EyeExamination = request.EyeExamination?.Trim();
         profile.DentalExamination = request.DentalExamination?.Trim();
+        profile.GeneralExamination = request.GeneralExamination?.Trim();
+        profile.VaccinationDetails = request.VaccinationDetails?.Trim();
+        profile.FamilyMedicalHistory = request.FamilyMedicalHistory?.Trim();
+        profile.PastMedicalHistory = request.PastMedicalHistory?.Trim();
+        profile.Disability = request.Disability?.Trim();
     }
 }
