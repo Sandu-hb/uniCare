@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ROUTES } from '@/config/routes'
+import { useAuth } from '@/features/auth/auth-context'
 import { useRegisterStudent } from '@/features/students/hooks'
 import { GENDERS } from '@/features/students/types'
 import { getApiErrorMessage } from '@/lib/api-client'
@@ -24,6 +25,7 @@ import { registerStudentSchema, UNIVERSITY_DOMAIN, type RegisterStudentFormValue
 
 export function RegisterStudentPage() {
   const navigate = useNavigate()
+  const { establishSession } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const registerStudent = useRegisterStudent()
@@ -51,9 +53,10 @@ export function RegisterStudentPage() {
         password: values.password,
       },
       {
-        onSuccess: () => {
-          toast.success('Account created. An admin must approve it before you can sign in.')
-          navigate(ROUTES.pendingApproval, { replace: true })
+        onSuccess: (response) => {
+          establishSession(response)
+          toast.success('Account created — upload your medical report and university ID to get started.')
+          navigate(ROUTES.student.dashboard, { replace: true })
         },
         // A duplicate registration number/email lands here as a 409.
         onError: (error) => toast.error(getApiErrorMessage(error)),
