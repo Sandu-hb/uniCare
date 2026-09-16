@@ -1,8 +1,9 @@
 /** Mirrors UniCare.Domain.Enums.DocumentType. */
-export type DocumentType = 'HospitalReport' | 'LabReport' | 'VaccinationRecord' | 'DentalReport' | 'Other'
+export type DocumentType =
+  | 'HospitalReport' | 'LabReport' | 'VaccinationRecord' | 'DentalReport' | 'UniversityId' | 'Other'
 
 export const DOCUMENT_TYPES: DocumentType[] = [
-  'HospitalReport', 'LabReport', 'VaccinationRecord', 'DentalReport', 'Other',
+  'HospitalReport', 'LabReport', 'VaccinationRecord', 'DentalReport', 'UniversityId', 'Other',
 ]
 
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
@@ -10,6 +11,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   LabReport: 'Lab report',
   VaccinationRecord: 'Vaccination record',
   DentalReport: 'Dental report',
+  UniversityId: 'University ID',
   Other: 'Other',
 }
 
