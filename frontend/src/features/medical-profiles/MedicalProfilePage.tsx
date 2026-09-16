@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/features/auth/auth-context'
+import { MedicalReportsUploadCard } from '@/features/medical-documents/components/MedicalReportsUploadCard'
 import { UniversityIdUploadCard } from '@/features/medical-documents/components/UniversityIdUploadCard'
 import { useDocuments } from '@/features/medical-documents/hooks'
 import { useMyStudent } from '@/features/students/hooks'
@@ -163,7 +164,8 @@ export function MedicalProfilePage() {
             )}
 
             {studentId && (
-                <div className="mb-6">
+                <div className="mb-6 grid gap-4 sm:grid-cols-2">
+                    <MedicalReportsUploadCard studentId={studentId} disabled={!isEditable || busy} />
                     <UniversityIdUploadCard studentId={studentId} disabled={!isEditable || busy} />
                 </div>
             )}
@@ -285,16 +287,11 @@ export function MedicalProfilePage() {
                             </Button>
                             {profile && !canSubmit && (
                                 <p className="text-sm text-muted-foreground">
-                                    {!hasMedicalDocument && (
-                                        <>
-                                            Upload a medical document (see{' '}
-                                            <Link to={isOwnView ? '/student/documents' : `/students/${studentId}/documents`}
-                                                className="underline">
-                                                Documents
-                                            </Link>) and your university ID above before submitting.
-                                        </>
-                                    )}
-                                    {hasMedicalDocument && !hasUniversityId && 'Upload your university ID above before submitting.'}
+                                    {!hasMedicalDocument && !hasUniversityId
+                                        ? 'Upload a medical report and your university ID above before submitting.'
+                                        : !hasMedicalDocument
+                                            ? 'Upload a medical report above before submitting.'
+                                            : 'Upload your university ID above before submitting.'}
                                 </p>
                             )}
                         </>
