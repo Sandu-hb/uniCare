@@ -1,4 +1,5 @@
 using UniCare.Application.Contracts;
+using UniCare.Application.Features.Auth.Dtos;
 using UniCare.Application.Features.Students.Dtos;
 using UniCare.Domain.Enums;
 
@@ -11,11 +12,16 @@ namespace UniCare.Application.Features.Students;
 /// </summary>
 public interface IStudentAccountService
 {
-    /// <summary>Self-service. Starts PendingApproval; an admin must Activate it.</summary>
+    /// <summary>
+    /// Self-service, and logs the new account straight in — the account itself
+    /// starts PendingApproval, but nothing about signing in is gated on that;
+    /// what actually unlocks (booking an appointment) is gated on the medical
+    /// profile being Verified, which is checked independently at that point.
+    /// </summary>
     /// <exception cref="Exceptions.ConflictException">
     /// The email or registration number is already taken.
     /// </exception>
-    Task<StudentDto> RegisterAsync(RegisterStudentRequest request, CancellationToken cancellationToken = default);
+    Task<AuthResponse> RegisterAsync(RegisterStudentRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Admin-only: the approval queue, optionally filtered by status and name/registration number.</summary>
     Task<PagedResult<StudentAccountDto>> SearchAsync(
