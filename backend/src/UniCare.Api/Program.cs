@@ -55,10 +55,23 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 
     // Demo accounts only (see IdentitySeeder) — never runs outside Development,
-    // so no seeded credentials can reach a deployed environment.
+    // so no seeded credentials can reach a deployed environment. A failure here
+    // (e.g. the database is briefly unreachable) must not crash the whole API:
+    // that would take down every endpoint over one seeding step that only matters
+    // for a handful of demo logins. Requests fail individually instead until the
+    // database is back, which is far better than the process being dead until
+    // someone notices and restarts it by hand.
     using (var scope = app.Services.CreateScope())
     {
-        await IdentitySeeder.SeedAsync(scope.ServiceProvider);
+        try
+        {
+            await IdentitySeeder.SeedAsync(scope.ServiceProvider);
+        }
+        catch (Exception ex)
+        {
+            scope.ServiceProvider.GetRequiredService<ILogger<Program>>()
+                .LogError(ex, "Identity seeding failed at startup — continuing without it.");
+        }
     }
 }
 else
