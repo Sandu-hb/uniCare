@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate, type Location } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ROLES } from '@/config/roles'
 import { dashboardFor, ROUTES } from '@/config/routes'
 import { useAuth } from './auth-context'
 import { AuthApiError } from './mock-api'
@@ -32,7 +33,10 @@ export function LoginPage() {
     setFormError(null)
     try {
       const user = await login(values.email, values.password)
-      if (user.status === 'PendingApproval') {
+      // A PendingApproval student has real onboarding to do (medical profile,
+      // documents) and their own routes already allow that — only staff
+      // pending approval is a genuine dead end with nothing to do but wait.
+      if (user.status === 'PendingApproval' && !user.roles.includes(ROLES.Student)) {
         navigate(ROUTES.pendingApproval, { replace: true })
         return
       }

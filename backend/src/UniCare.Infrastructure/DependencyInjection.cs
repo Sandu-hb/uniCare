@@ -72,6 +72,7 @@ public static class DependencyInjection
             .AddSignInManager();
 
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<TokenIssuer>();
         services.AddScoped<IStaffService, StaffService>();
         services.AddScoped<IStudentAccountService, StudentAccountService>();
         services.AddScoped<JwtTokenGenerator>();

@@ -58,8 +58,10 @@ export function useCreateStudent() {
 }
 
 /**
- * Self-registration happens while signed out, so there is no cache to update —
- * the account is PendingApproval anyway and cannot fetch anything yet.
+ * Registration auto-logs the student in — the caller is responsible for
+ * feeding the response into the auth context (see RegisterStudentPage), the
+ * same way a real login does. No query cache to update here; there is
+ * nothing cached yet for a session that has only just started.
  */
 export function useRegisterStudent() {
   return useMutation({

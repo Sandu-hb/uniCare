@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using UniCare.Application.Contracts;
 using UniCare.Application.Exceptions;
 using UniCare.Application.Features.Auth;
+using UniCare.Application.Features.Auth.Dtos;
 using UniCare.Application.Features.Students;
 using UniCare.Application.Features.Students.Dtos;
 using UniCare.Domain.Constants;
@@ -20,7 +21,8 @@ namespace UniCare.Infrastructure.Authentication;
 public class StudentAccountService(
     UserManager<ApplicationUser> userManager,
     UniCareDbContext db,
-    IAuthService authService) : IStudentAccountService
+    IAuthService authService,
+    TokenIssuer tokenIssuer) : IStudentAccountService
 {
     private static readonly AccountStatus[] ActivatableStates =
         [AccountStatus.PendingApproval, AccountStatus.Suspended];
@@ -28,7 +30,7 @@ public class StudentAccountService(
     private static readonly AccountStatus[] SuspendableStates =
         [AccountStatus.Active, AccountStatus.PendingApproval];
 
-    public async Task<StudentDto> RegisterAsync(
+    public async Task<AuthResponse> RegisterAsync(
         RegisterStudentRequest request, CancellationToken cancellationToken = default)
     {
         var registrationNumber = request.RegistrationNumber.Trim();
@@ -81,7 +83,10 @@ public class StudentAccountService(
         db.Students.Add(student);
         await db.SaveChangesAsync(cancellationToken);
 
-        return student.ToDto();
+        // Auto-login: nothing about signing in is gated on PendingApproval — the
+        // actual gate is the medical profile's own Verified check, enforced
+        // independently wherever it matters (booking an appointment).
+        return await tokenIssuer.IssueAsync(user, cancellationToken);
     }
 
     public async Task<PagedResult<StudentAccountDto>> SearchAsync(

@@ -14,17 +14,12 @@ namespace UniCare.Infrastructure.Authentication;
 public class AuthService(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    JwtTokenGenerator tokenGenerator) : IAuthService
+    TokenIssuer tokenIssuer) : IAuthService
 {
     // Name used when storing tokens in AspNetUserTokens.
     // The loginProvider + tokenName pair forms a composite key on that table.
     private const string LoginProvider = "UniCare";
     private const string RefreshTokenName = "RefreshToken";
-
-    // Refresh tokens live for 7 days. Access tokens are 15 minutes (set via
-    // JWT_EXPIRY_MINUTES in .env). The asymmetry means a stolen access token
-    // expires quickly, while the refresh token survives a closed browser tab.
-    private static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(7);
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
@@ -50,7 +45,7 @@ public class AuthService(
             throw new AccountSuspendedException();
         }
 
-        return await BuildAuthResponseAsync(user);
+        return await tokenIssuer.IssueAsync(user, cancellationToken);
     }
 
     public async Task<AuthResponse> RefreshAsync(RefreshRequest request, CancellationToken cancellationToken = default)
@@ -76,7 +71,7 @@ public class AuthService(
         // Token rotation: delete the old token and issue a brand-new one.
         // If a stolen token is ever used, the legitimate user's next refresh will
         // fail (token already rotated), alerting them to re-authenticate.
-        return await BuildAuthResponseAsync(user);
+        return await tokenIssuer.IssueAsync(user, cancellationToken);
     }
 
     public async Task RevokeAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -94,40 +89,12 @@ public class AuthService(
             ?? throw new NotFoundException(nameof(ApplicationUser), userId);
 
         var roles = await userManager.GetRolesAsync(user);
-        return ToCurrentUserDto(user, roles);
+        return TokenIssuer.ToCurrentUserDto(user, roles);
     }
 
     // ---------------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------------
-
-    /// <summary>
-    /// Generates a new access token + refresh token, stores the refresh token in
-    /// AspNetUserTokens (replacing any existing one), and builds the response DTO.
-    /// </summary>
-    private async Task<AuthResponse> BuildAuthResponseAsync(ApplicationUser user)
-    {
-        var roles = await userManager.GetRolesAsync(user);
-        var (token, expiresAtUtc) = tokenGenerator.Generate(user, roles);
-
-        // Cryptographically random, URL-safe opaque token.
-        // Guid.NewGuid() is not cryptographically strong — use RandomNumberGenerator instead.
-        var refreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
-        var refreshTokenExpiresAtUtc = DateTimeOffset.UtcNow.Add(RefreshTokenLifetime);
-
-        // SetAuthenticationTokenAsync upserts: creates the row if absent,
-        // replaces the value if present — automatic rotation with no extra SQL.
-        await userManager.SetAuthenticationTokenAsync(user, LoginProvider, RefreshTokenName, refreshToken);
-
-        return new AuthResponse
-        {
-            Token = token,
-            ExpiresAtUtc = expiresAtUtc,
-            RefreshToken = refreshToken,
-            RefreshTokenExpiresAtUtc = refreshTokenExpiresAtUtc,
-            User = ToCurrentUserDto(user, roles),
-        };
-    }
 
     /// <summary>
     /// Searches AspNetUserTokens for the given refresh token value.
@@ -155,13 +122,4 @@ public class AuthService(
         }
         return null;
     }
-
-    private static CurrentUserDto ToCurrentUserDto(ApplicationUser user, IList<string> roles) => new()
-    {
-        Id = user.Id,
-        FullName = user.FullName,
-        Email = user.Email ?? string.Empty,
-        Roles = [.. roles],
-        Status = user.Status,
-    };
 }

@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UniCare.Application.Contracts;
+using UniCare.Application.Features.Auth.Dtos;
 using UniCare.Application.Features.Students;
 using UniCare.Application.Features.Students.Dtos;
 using UniCare.Domain.Constants;
@@ -18,9 +19,15 @@ public class StudentsController(
     IValidator<CreateStudentRequest> createValidator,
     IValidator<RegisterStudentRequest> registerValidator) : ControllerBase
 {
+    /// <summary>
+    /// Creates the account and logs it straight in — see IStudentAccountService
+    /// for why a PendingApproval account can safely do that. 200, not 201: the
+    /// response is a session (matches AuthController.Login), not a resource with
+    /// a Location a self-registering caller could even necessarily fetch.
+    /// </summary>
     [HttpPost("register")]
     [AllowAnonymous]
-    public async Task<ActionResult<StudentDto>> Register(
+    public async Task<ActionResult<AuthResponse>> Register(
         RegisterStudentRequest request, CancellationToken cancellationToken)
     {
         var validation = await registerValidator.ValidateAsync(request, cancellationToken);
@@ -33,8 +40,7 @@ public class StudentsController(
             return ValidationProblem(ModelState);
         }
 
-        var created = await studentAccountService.RegisterAsync(request, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        return Ok(await studentAccountService.RegisterAsync(request, cancellationToken));
     }
 
     [HttpPost("{id:guid}/activate")]

@@ -84,11 +84,23 @@ public class MedicalProfileService(IApplicationDbContext db) : IMedicalProfileSe
                 $"Only a draft or rejected profile can be submitted; this one is {profile.Status}.");
         }
 
-        var hasDocument = await db.MedicalDocuments.AnyAsync(d => d.StudentId == studentId, cancellationToken);
-        if (!hasDocument)
+        // University ID is an identity document, not a medical one — counting it
+        // toward "any document" would let a student satisfy this gate without
+        // ever uploading an actual medical report.
+        var hasMedicalDocument = await db.MedicalDocuments
+            .AnyAsync(d => d.StudentId == studentId && d.DocumentType != DocumentType.UniversityId, cancellationToken);
+        if (!hasMedicalDocument)
         {
             throw new ConflictException(
                 "Upload at least one medical document before submitting your profile for verification.");
+        }
+
+        var hasUniversityId = await db.MedicalDocuments
+            .AnyAsync(d => d.StudentId == studentId && d.DocumentType == DocumentType.UniversityId, cancellationToken);
+        if (!hasUniversityId)
+        {
+            throw new ConflictException(
+                "Upload your university ID before submitting your profile for verification.");
         }
 
         profile.Status = VerificationStatus.SubmittedForVerification;
