@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { clearToken, readToken, writeTokens } from '@/lib/token-storage'
 import * as authApi from './api'
 import { AuthContext, type AuthContextValue } from './auth-context'
-import type { CurrentUser, SessionStatus } from './types'
+import type { CurrentUser, LoginResponse, SessionStatus } from './types'
 
 /**
  * Holds the signed-in user for the whole app. Kept in its own file so it
@@ -55,6 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.user)
         setStatus('authenticated')
         return response.user
+      },
+      establishSession: (response: LoginResponse) => {
+        writeTokens(response.token, response.refreshToken)
+        setUser(response.user)
+        setStatus('authenticated')
       },
       logout: async () => {
         try {
