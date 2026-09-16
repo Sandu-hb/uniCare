@@ -30,7 +30,7 @@ public enum PrescriptionStatus { Issued, PartiallyDispensed, Dispensed, Cancelle
 
 public enum MedicineForm { Tablet, Capsule, Syrup, Injection, Ointment, Drops, Inhaler, Other }
 
-public enum DocumentType { HospitalReport, LabReport, VaccinationRecord, DentalReport, Other }
+public enum DocumentType { HospitalReport, LabReport, VaccinationRecord, DentalReport, UniversityId, Other }
 
 public enum DocumentStatus { Uploaded }
 
