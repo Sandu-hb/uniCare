@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/features/auth/auth-context'
+import { UniversityIdUploadCard } from '@/features/medical-documents/components/UniversityIdUploadCard'
+import { useDocuments } from '@/features/medical-documents/hooks'
 import { useMyStudent } from '@/features/students/hooks'
 import { getApiErrorMessage } from '@/lib/api-client'
 import {
@@ -40,6 +42,7 @@ export function MedicalProfilePage() {
     const canReview = hasRole('Doctor', 'Nurse', 'Admin')
 
     const { data: profile, isPending, error } = useMedicalProfile(studentId)
+    const { data: documents } = useDocuments(studentId)
     const upsert = useUpsertMedicalProfile(studentId)
     const submit = useSubmitMedicalProfile(studentId)
     const verify = useVerifyMedicalProfile(studentId)
@@ -62,6 +65,12 @@ export function MedicalProfilePage() {
     const isEditable = !profile || EDITABLE_STATUSES.includes(status)
     const awaitingReview = status === 'SubmittedForVerification'
     const busy = upsert.isPending || submit.isPending || verify.isPending || reject.isPending
+
+    // Mirrors MedicalProfileService.SubmitAsync's two document checks — shown up
+    // front so the student sees what's missing instead of a failed submit.
+    const hasMedicalDocument = documents?.some((d) => d.documentType !== 'UniversityId') ?? false
+    const hasUniversityId = documents?.some((d) => d.documentType === 'UniversityId') ?? false
+    const canSubmit = hasMedicalDocument && hasUniversityId
 
     function onSave(values: UpsertMedicalProfileRequest) {
         upsert.mutate(
@@ -150,6 +159,12 @@ export function MedicalProfilePage() {
                 <div className="mb-4 rounded-md border border-destructive bg-destructive/10 p-4">
                     <p className="text-sm font-medium text-destructive">Changes requested</p>
                     <p className="mt-1 text-sm text-foreground">{profile.rejectionReason}</p>
+                </div>
+            )}
+
+            {studentId && (
+                <div className="mb-6">
+                    <UniversityIdUploadCard studentId={studentId} disabled={!isEditable || busy} />
                 </div>
             )}
 
@@ -263,10 +278,25 @@ export function MedicalProfilePage() {
                             <Button type="submit" disabled={busy}>
                                 {upsert.isPending ? 'Saving…' : 'Save'}
                             </Button>
-                            <Button type="button" variant="outline" disabled={busy || !profile}
+                            <Button type="button" variant="outline" disabled={busy || !profile || !canSubmit}
+                                title={canSubmit ? undefined : 'Upload a medical document and your university ID first'}
                                 onClick={onSubmitForReview}>
                                 Submit for verification
                             </Button>
+                            {profile && !canSubmit && (
+                                <p className="text-sm text-muted-foreground">
+                                    {!hasMedicalDocument && (
+                                        <>
+                                            Upload a medical document (see{' '}
+                                            <Link to={isOwnView ? '/student/documents' : `/students/${studentId}/documents`}
+                                                className="underline">
+                                                Documents
+                                            </Link>) and your university ID above before submitting.
+                                        </>
+                                    )}
+                                    {hasMedicalDocument && !hasUniversityId && 'Upload your university ID above before submitting.'}
+                                </p>
+                            )}
                         </>
                     )}
 
