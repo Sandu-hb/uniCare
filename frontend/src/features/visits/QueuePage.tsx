@@ -6,9 +6,13 @@ import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ROLES } from '@/config/roles'
+import { useAuth } from '@/features/auth/auth-context'
+import { RecordConsultationDialog } from '@/features/consultations/components/RecordConsultationDialog'
+import { RecordVitalsDialog } from '@/features/vitals/components/RecordVitalsDialog'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { useAbandonVisit, useAdvanceVisit, useCallVisit, useQueue } from './hooks'
-import { VISIT_STATUS_LABELS, type QueueStage, type VisitStatus } from './types'
+import { VISIT_STATUS_LABELS, type QueueStage, type Visit, type VisitStatus } from './types'
 
 const STAGES: QueueStage[] = ['Nurse', 'Doctor']
 
@@ -18,8 +22,14 @@ function statusVariant(status: VisitStatus) {
   return 'secondary' as const
 }
 
+/** The record that must exist before a visit can leave this stage. */
+function stageRecordDone(visit: Visit, stage: QueueStage): boolean {
+  return stage === 'Nurse' ? visit.hasVitalSign : visit.hasConsultation
+}
+
 export function QueuePage() {
   const [stage, setStage] = useState<QueueStage>('Nurse')
+  const { hasRole } = useAuth()
   const { data: queue, isPending, error } = useQueue(stage)
   const call = useCallVisit()
   const advance = useAdvanceVisit()
@@ -75,18 +85,19 @@ export function QueuePage() {
                   <TableHead>#</TableHead>
                   <TableHead>Student</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>{stage === 'Nurse' ? 'Vitals' : 'Consultation'}</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isPending && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">Loading…</TableCell>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">Loading…</TableCell>
                   </TableRow>
                 )}
                 {queue?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">Nobody in this queue right now.</TableCell>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">Nobody in this queue right now.</TableCell>
                   </TableRow>
                 )}
                 {queue?.map((visit) => (
@@ -101,12 +112,33 @@ export function QueuePage() {
                         {visit.calledAt ? 'Called' : VISIT_STATUS_LABELS[visit.status]}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      {stageRecordDone(visit, stage)
+                        ? <Badge variant="secondary">Recorded</Badge>
+                        : <span className="text-xs text-muted-foreground">Not yet</span>}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1.5">
+                        {stage === 'Nurse' && hasRole(ROLES.Nurse) && (
+                          <RecordVitalsDialog visitId={visit.id} studentName={visit.studentName} />
+                        )}
+                        {stage === 'Doctor' && hasRole(ROLES.Doctor) && (
+                          <RecordConsultationDialog visitId={visit.id} studentName={visit.studentName} />
+                        )}
                         <Button size="sm" variant="outline" disabled={call.isPending} onClick={() => onCall(visit.id)}>
                           Call
                         </Button>
-                        <Button size="sm" disabled={advance.isPending} onClick={() => onAdvance(visit.id)}>
+                        {/* Mirrors VisitService: it refuses to advance without the
+                            stage's record, so show that up front rather than
+                            letting the click fail. */}
+                        <Button
+                          size="sm"
+                          disabled={advance.isPending || !stageRecordDone(visit, stage)}
+                          title={stageRecordDone(visit, stage)
+                            ? undefined
+                            : `Record ${stage === 'Nurse' ? 'vitals' : 'the consultation'} first`}
+                          onClick={() => onAdvance(visit.id)}
+                        >
                           {stage === 'Nurse' ? 'Send to doctor' : 'Complete'}
                         </Button>
                         <Button size="sm" variant="destructive" disabled={abandon.isPending}
