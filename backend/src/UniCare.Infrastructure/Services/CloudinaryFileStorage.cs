@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using UniCare.Application.Abstractions;
@@ -57,17 +58,42 @@ public class CloudinaryFileStorage : IFileStorage
         return publicId; // saved as MedicalDocument.StorageKey
     }
 
+    // Every upload since the "upload" (public) type was adopted lands here first —
+    // "authenticated"/"private" only remain because a handful of documents were
+    // uploaded before that change and were never migrated. A resource's delivery
+    // type is fixed at upload time, so reading it back means asking for the type
+    // it actually has; trying "upload" first keeps the common case to one request.
+    private static readonly string[] DeliveryTypesToTry = ["upload", "authenticated", "private"];
+
     public async Task<Stream> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default)
     {
-        var url = _cloudinary.Api
-            .UrlImgUp
-            .ResourceType("raw")
-            .Type("upload")
-            .BuildUrl(storageKey);
-
         using var http = new HttpClient();
-        var bytes = await http.GetByteArrayAsync(url, cancellationToken);
-        return new MemoryStream(bytes);
+
+        for (var i = 0; i < DeliveryTypesToTry.Length; i++)
+        {
+            var url = _cloudinary.Api
+                .UrlImgUp
+                .ResourceType("raw")
+                .Type(DeliveryTypesToTry[i])
+                .Signed(DeliveryTypesToTry[i] != "upload")
+                .BuildUrl(storageKey);
+
+            var response = await http.GetAsync(url, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                // Buffered, not the live response stream — safe to return after
+                // `http` is disposed on the way out of this method.
+                var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                return new MemoryStream(bytes);
+            }
+
+            if (i == DeliveryTypesToTry.Length - 1)
+            {
+                response.EnsureSuccessStatusCode();
+            }
+        }
+
+        throw new UnreachableException(); // loop above always returns or throws
     }
 
     public async Task DeleteAsync(string storageKey, CancellationToken cancellationToken = default)
