@@ -40,7 +40,7 @@ export function MedicalProfilePage() {
     // even in staff-view — the result is simply unused there.
     const { data: myStudent } = useMyStudent()
     const studentId = routeStudentId ?? myStudent?.id ?? ''
-    const canReview = hasRole('Doctor', 'Admin')
+    const canReview = hasRole('Admin')
 
     const { data: profile, isPending, error } = useMedicalProfile(studentId)
     const { data: documents } = useDocuments(studentId)
