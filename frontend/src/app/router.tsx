@@ -59,15 +59,15 @@ export function AppRouter() {
             <Route path={ROUTES.staff.appointments} element={<StaffAppointmentsPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.Doctor]} />}>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.Doctor, ROLES.Admin]} />}>
             <Route path={ROUTES.staff.queue} element={<DoctorQueuePage />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.LabStaff]} />}>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.LabStaff, ROLES.Admin]} />}>
             <Route path={ROUTES.staff.labQueue} element={<LabQueuePage />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.PharmacyStaff]} />}>
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.PharmacyStaff, ROLES.Admin]} />}>
             <Route path={ROUTES.staff.pharmacyQueue} element={<PharmacyQueuePage />} />
           </Route>
         </Route>
