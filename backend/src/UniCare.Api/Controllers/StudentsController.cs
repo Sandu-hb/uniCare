@@ -17,6 +17,7 @@ public class StudentsController(
     IStudentService studentService,
     IStudentAccountService studentAccountService,
     IValidator<CreateStudentRequest> createValidator,
+    IValidator<UpdateStudentRequest> updateValidator,
     IValidator<RegisterStudentRequest> registerValidator) : ControllerBase
 {
     /// <summary>
@@ -123,8 +124,16 @@ public class StudentsController(
     public async Task<ActionResult<StudentDto>> Update(
         Guid id, UpdateStudentRequest request, CancellationToken cancellationToken)
     {
-        // TODO: no UpdateStudentRequestValidator exists yet — this endpoint currently
-        // accepts anything the type allows. Write one before this ships.
+        var validation = await updateValidator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+            {
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            }
+            return ValidationProblem(ModelState);
+        }
+
         var updated = await studentService.UpdateAsync(id, request, cancellationToken);
         return Ok(updated);
     }
