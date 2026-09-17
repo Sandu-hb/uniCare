@@ -118,6 +118,21 @@ public static class IdentitySeeder
             });
         }
 
+        if (!await db.Medicines.AnyAsync())
+        {
+            db.Medicines.AddRange(
+                new Medicine { Name = "Paracetamol", Form = MedicineForm.Tablet, Strength = "500mg", Unit = "tablet" },
+                new Medicine { Name = "Amoxicillin", Form = MedicineForm.Capsule, Strength = "250mg", Unit = "capsule" },
+                new Medicine { Name = "Ibuprofen", Form = MedicineForm.Tablet, Strength = "400mg", Unit = "tablet" },
+                new Medicine { Name = "Cetirizine", Form = MedicineForm.Tablet, Strength = "10mg", Unit = "tablet" },
+                new Medicine { Name = "Omeprazole", Form = MedicineForm.Capsule, Strength = "20mg", Unit = "capsule" },
+                new Medicine { Name = "Amoxicillin-Clavulanate", GenericName = "Co-amoxiclav", Form = MedicineForm.Tablet, Strength = "625mg", Unit = "tablet" },
+                new Medicine { Name = "Salbutamol", Form = MedicineForm.Inhaler, Strength = "100mcg", Unit = "inhaler" },
+                new Medicine { Name = "Diclofenac Gel", Form = MedicineForm.Ointment, Strength = "1%", Unit = "tube" },
+                new Medicine { Name = "Cough Syrup", GenericName = "Dextromethorphan", Form = MedicineForm.Syrup, Unit = "ml" },
+                new Medicine { Name = "Loratadine", Form = MedicineForm.Tablet, Strength = "10mg", Unit = "tablet" });
+        }
+
         await db.SaveChangesAsync();
     }
 
