@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCircle2, Circle, FileText, Pill } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Circle, ClipboardList, FileText, Pill } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -58,7 +58,7 @@ export function StudentDashboardPage() {
             <p className="text-sm text-muted-foreground">
               {profile?.status === 'Rejected'
                 ? 'Staff requested changes to your medical profile — see details and resubmit.'
-                : 'Upload your medical report and complete your medical profile before you can book appointments.'}
+                : 'Upload your medical report and complete your medical profile before the medical centre can book an appointment for you.'}
             </p>
           </div>
           <Button asChild size="sm">
@@ -99,12 +99,12 @@ export function StudentDashboardPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No upcoming appointments.</p>
+              <p className="text-sm text-muted-foreground">
+                No upcoming appointments — the medical centre will schedule one for you.
+              </p>
             )}
             <Button asChild size="sm" className="mt-4">
-              <Link to="/student/appointments">
-                {upcoming ? 'View appointments' : 'Book an appointment'}
-              </Link>
+              <Link to="/student/appointments">View appointments</Link>
             </Button>
           </CardContent>
         </Card>
@@ -139,14 +139,14 @@ export function StudentDashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link to="/student/appointments" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted/50">
           <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
             <CalendarDays className="size-[18px] text-primary" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold">Book appointment</span>
-            <span className="text-xs text-muted-foreground">Request a new slot</span>
+            <span className="text-sm font-semibold">Appointments</span>
+            <span className="text-xs text-muted-foreground">Upcoming and past visits</span>
           </div>
         </Link>
 
@@ -160,15 +160,25 @@ export function StudentDashboardPage() {
           </div>
         </Link>
 
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 opacity-50">
+        <Link to="/student/prescriptions" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted/50">
           <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
             <Pill className="size-[18px] text-primary" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold">Prescriptions</span>
-            <span className="text-xs text-muted-foreground">Coming soon</span>
+            <span className="text-xs text-muted-foreground">Medicine from past visits</span>
           </div>
-        </div>
+        </Link>
+
+        <Link to="/student/reports" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted/50">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
+            <ClipboardList className="size-[18px] text-primary" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold">Reports</span>
+            <span className="text-xs text-muted-foreground">Consultation and lab results</span>
+          </div>
+        </Link>
       </div>
     </div>
   )
