@@ -167,9 +167,9 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
             throw new ConflictException("Cannot assign an inactive staff member to an appointment.");
         }
 
-        if (staff.Role is not (StaffRole.Doctor or StaffRole.Nurse))
+        if (staff.Role is not StaffRole.Doctor)
         {
-            throw new ConflictException("Appointments can only be assigned to a doctor or nurse.");
+            throw new ConflictException("Appointments can only be assigned to a doctor.");
         }
     }
 }
