@@ -5,7 +5,7 @@ namespace UniCare.Domain.Entities;
 
 /// <summary>
 /// One attendance at the medical centre, created at check-in. This is the anchor
-/// that ties vitals, consultation and queue position together.
+/// that ties the consultation, lab order and queue position together.
 /// </summary>
 public class MedicalVisit : AuditableEntity
 {
@@ -21,7 +21,7 @@ public class MedicalVisit : AuditableEntity
     public VisitStatus Status { get; set; } = VisitStatus.CheckedIn;
     public bool IsEmergency { get; set; }
 
-    public VitalSign? VitalSign { get; set; }
     public Consultation? Consultation { get; set; }
+    public LabOrder? LabOrder { get; set; }
     public QueueEntry? QueueEntry { get; set; }
 }
