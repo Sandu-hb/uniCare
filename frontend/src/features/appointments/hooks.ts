@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   assignAppointmentStaff, cancelAppointment, createAppointment,
-  getAssignableStaff, getForStudent, getMyStaffAppointments, searchAppointments,
+  getAssignableStaff, getForStudent, searchAppointments,
   type SearchAppointmentsParams,
 } from './api'
 import type { CreateAppointmentRequest } from './types'
@@ -9,7 +9,6 @@ import type { CreateAppointmentRequest } from './types'
 export const appointmentKeys = {
   all: ['appointments'] as const,
   byStudent: (studentId: string) => [...appointmentKeys.all, 'student', studentId] as const,
-  mine: ['appointments', 'mine'] as const,
   queue: (params: SearchAppointmentsParams) => [...appointmentKeys.all, 'queue', params] as const,
   assignableStaff: ['appointments', 'assignable-staff'] as const,
 }
@@ -19,13 +18,6 @@ export function useMyAppointments(studentId: string) {
     queryKey: appointmentKeys.byStudent(studentId),
     queryFn: () => getForStudent(studentId),
     enabled: Boolean(studentId),
-  })
-}
-
-export function useMyStaffAppointments() {
-  return useQuery({
-    queryKey: appointmentKeys.mine,
-    queryFn: getMyStaffAppointments,
   })
 }
 
