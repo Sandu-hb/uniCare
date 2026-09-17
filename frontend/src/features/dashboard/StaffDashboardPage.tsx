@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/card'
 import { useAppointmentQueue } from '@/features/appointments/hooks'
 import { useAuth } from '@/features/auth/auth-context'
-import { ROLES } from '@/config/roles'
+import { ROLES, type Role } from '@/config/roles'
 import { useStudentAccounts } from '@/features/students/hooks'
 import { useQueue } from '@/features/visits/hooks'
 import { VISIT_STATUS_LABELS } from '@/features/visits/types'
@@ -38,7 +38,7 @@ function StatCard({ icon, label, value, hint }: {
   )
 }
 
-function myQueueRoute(hasRole: (...roles: string[]) => boolean): string {
+function myQueueRoute(hasRole: (...roles: Role[]) => boolean): string {
   if (hasRole(ROLES.LabStaff)) return '/staff/lab-queue'
   if (hasRole(ROLES.PharmacyStaff)) return '/staff/pharmacy-queue'
   return '/staff/queue'
