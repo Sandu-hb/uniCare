@@ -19,10 +19,8 @@ public record VisitDto
     public DateTimeOffset? CalledAt { get; init; }
 
     /// <summary>
-    /// Whether the clinical record for each stage exists yet. The queue board
-    /// uses these to show what still needs doing before this visit can advance —
-    /// VisitService enforces the same rule server-side.
+    /// Whether the consultation record exists yet — the queue board uses this
+    /// to show what still needs doing before this visit can advance.
     /// </summary>
-    public required bool HasVitalSign { get; init; }
     public required bool HasConsultation { get; init; }
 }
