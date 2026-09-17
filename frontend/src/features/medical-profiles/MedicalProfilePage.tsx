@@ -59,11 +59,12 @@ export function MedicalProfilePage() {
         if (profile) reset(profile)
     }, [profile, reset])
 
-    // A profile that has been submitted or verified is read-only. This mirrors
-    // MedicalProfileService.EditableStates — the server rejects edits anyway;
-    // this only stops the user wasting a round trip discovering that.
+    // A profile that has been submitted or verified is read-only, and so is
+    // any profile viewed by staff — only the owning student may ever edit it
+    // (the server enforces the same ownership check on upsert; this just
+    // keeps staff from seeing an editable form they'd get a 403 from).
     const status = profile?.status ?? 'Draft'
-    const isEditable = !profile || EDITABLE_STATUSES.includes(status)
+    const isEditable = isOwnView && (!profile || EDITABLE_STATUSES.includes(status))
     const awaitingReview = status === 'SubmittedForVerification'
     const busy = upsert.isPending || submit.isPending || verify.isPending || reject.isPending
 
