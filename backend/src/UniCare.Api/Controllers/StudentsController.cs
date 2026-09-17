@@ -98,6 +98,7 @@ public class StudentsController(
     }
 
     [HttpPost]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<ActionResult<StudentDto>> Create(
         CreateStudentRequest request, CancellationToken cancellationToken)
     {
