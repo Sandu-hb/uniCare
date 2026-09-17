@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { abandonVisit, advanceVisit, callVisit, checkIn, getQueue } from './api'
+import { abandonVisit, callVisit, checkIn, getQueue } from './api'
 import type { CheckInRequest, QueueStage } from './types'
 
 export const visitKeys = {
@@ -42,10 +42,6 @@ function useVisitMutation(fn: (id: string) => ReturnType<typeof callVisit>) {
 
 export function useCallVisit() {
   return useVisitMutation(callVisit)
-}
-
-export function useAdvanceVisit() {
-  return useVisitMutation(advanceVisit)
 }
 
 export function useAbandonVisit() {

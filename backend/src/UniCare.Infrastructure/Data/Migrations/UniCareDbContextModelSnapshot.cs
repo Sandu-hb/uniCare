@@ -252,6 +252,64 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.ToTable("Diagnoses");
                 });
 
+            modelBuilder.Entity("UniCare.Domain.Entities.LabOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MedicalVisitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OrderedByStaffId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RequestDetails")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ResultNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicalVisitId")
+                        .IsUnique();
+
+                    b.HasIndex("OrderedByStaffId");
+
+                    b.ToTable("LabOrders");
+                });
+
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
                 {
                     b.Property<Guid>("Id")
@@ -889,74 +947,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.ToTable("Students");
                 });
 
-            modelBuilder.Entity("UniCare.Domain.Entities.VitalSign", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("DiastolicBp")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("HeightCm")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("MedicalVisitId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Observations")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<int?>("PulseBpm")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("RecordedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("RecordedByStaffId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("SystolicBp")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("TemperatureCelsius")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal?>("WeightKg")
-                        .HasPrecision(6, 2)
-                        .HasColumnType("numeric(6,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MedicalVisitId")
-                        .IsUnique();
-
-                    b.HasIndex("RecordedByStaffId");
-
-                    b.ToTable("VitalSigns");
-                });
-
             modelBuilder.Entity("UniCare.Infrastructure.Authentication.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1108,6 +1098,25 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Navigation("Consultation");
                 });
 
+            modelBuilder.Entity("UniCare.Domain.Entities.LabOrder", b =>
+                {
+                    b.HasOne("UniCare.Domain.Entities.MedicalVisit", "MedicalVisit")
+                        .WithOne("LabOrder")
+                        .HasForeignKey("UniCare.Domain.Entities.LabOrder", "MedicalVisitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("UniCare.Domain.Entities.Staff", "OrderedByStaff")
+                        .WithMany()
+                        .HasForeignKey("OrderedByStaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MedicalVisit");
+
+                    b.Navigation("OrderedByStaff");
+                });
+
             modelBuilder.Entity("UniCare.Domain.Entities.MedicalDocument", b =>
                 {
                     b.HasOne("UniCare.Domain.Entities.Student", "Student")
@@ -1208,25 +1217,6 @@ namespace UniCare.Infrastructure.Data.Migrations
                     b.Navigation("MedicalVisit");
                 });
 
-            modelBuilder.Entity("UniCare.Domain.Entities.VitalSign", b =>
-                {
-                    b.HasOne("UniCare.Domain.Entities.MedicalVisit", "MedicalVisit")
-                        .WithOne("VitalSign")
-                        .HasForeignKey("UniCare.Domain.Entities.VitalSign", "MedicalVisitId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("UniCare.Domain.Entities.Staff", "RecordedByStaff")
-                        .WithMany()
-                        .HasForeignKey("RecordedByStaffId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MedicalVisit");
-
-                    b.Navigation("RecordedByStaff");
-                });
-
             modelBuilder.Entity("UniCare.Domain.Entities.Appointment", b =>
                 {
                     b.Navigation("Visit");
@@ -1243,9 +1233,9 @@ namespace UniCare.Infrastructure.Data.Migrations
                 {
                     b.Navigation("Consultation");
 
-                    b.Navigation("QueueEntry");
+                    b.Navigation("LabOrder");
 
-                    b.Navigation("VitalSign");
+                    b.Navigation("QueueEntry");
                 });
 
             modelBuilder.Entity("UniCare.Domain.Entities.Medicine", b =>

@@ -70,7 +70,7 @@ export function StudentsPage() {
             {data ? `${data.totalCount} registered` : 'Loading…'}
           </p>
         </div>
-        <CreateStudentDialog />
+        {isAdmin && <CreateStudentDialog />}
       </div>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">

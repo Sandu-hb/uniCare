@@ -21,7 +21,7 @@ function statusVariant(status: AppointmentStatus) {
 
 function AssignPicker({ appointment }: { appointment: Appointment }) {
   const { data: staff } = useAssignableStaff()
-  const doctorsAndNurses = staff?.filter((s) => s.role === 'Doctor' || s.role === 'Nurse')
+  const doctors = staff?.filter((s) => s.role === 'Doctor')
   const assign = useAssignAppointmentStaff()
   const [selected, setSelected] = useState(appointment.assignedStaffId ?? '')
 
@@ -41,7 +41,7 @@ function AssignPicker({ appointment }: { appointment: Appointment }) {
         onChange={(e) => setSelected(e.target.value)}
       >
         <option value="">— select —</option>
-        {doctorsAndNurses?.map((s) => (
+        {doctors?.map((s) => (
           <option key={s.id} value={s.id}>{s.fullName} ({s.role})</option>
         ))}
       </select>

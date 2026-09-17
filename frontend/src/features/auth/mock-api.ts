@@ -35,14 +35,6 @@ const accounts: MockAccount[] = [
     status: 'Active',
   },
   {
-    id: 'u-nurse-1',
-    email: 'nurse@uom.lk',
-    password: 'Passw0rd',
-    fullName: 'Kavindi Silva',
-    roles: [ROLES.Nurse],
-    status: 'PendingApproval',
-  },
-  {
     id: 'u-admin-1',
     email: 'admin@uom.lk',
     password: 'Passw0rd',
@@ -51,11 +43,19 @@ const accounts: MockAccount[] = [
     status: 'Active',
   },
   {
-    id: 'u-sysadmin-1',
-    email: 'systemadmin@uom.lk',
+    id: 'u-pharmacy-1',
+    email: 'pharmacy@uom.lk',
     password: 'Passw0rd',
-    fullName: 'System Administrator',
-    roles: [ROLES.SystemAdmin],
+    fullName: 'Pharmacy Counter',
+    roles: [ROLES.PharmacyStaff],
+    status: 'Active',
+  },
+  {
+    id: 'u-lab-1',
+    email: 'lab@uom.lk',
+    password: 'Passw0rd',
+    fullName: 'Laboratory Bench',
+    roles: [ROLES.LabStaff],
     status: 'Active',
   },
 ]

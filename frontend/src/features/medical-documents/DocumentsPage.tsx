@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -6,9 +7,10 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useMyStudent } from '@/features/students/hooks'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { getDocumentContent } from './api'
 import { UploadDocumentDialog } from './components/UploadDocumentDialog'
 import { useDocuments } from './hooks'
-import { DOCUMENT_TYPE_LABELS } from './types'
+import { DOCUMENT_TYPE_LABELS, type MedicalDocument } from './types'
 
 function formatSize(bytes: number): string {
   return bytes < 1024 * 1024
@@ -24,6 +26,19 @@ export function DocumentsPage() {
 
   const { data: documents, isPending, error } = useDocuments(studentId)
 
+  async function onView(doc: MedicalDocument) {
+    try {
+      const blob = await getDocumentContent(studentId, doc.id)
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      // The tab has its own reference to the bytes now; free ours once it's
+      // had a moment to load rather than leaking the object URL forever.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (e) {
+      toast.error(getApiErrorMessage(e))
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl p-6">
       {isOwnView && (
@@ -38,7 +53,7 @@ export function DocumentsPage() {
             Hospital-verified documents for AI-assisted record extraction.
           </p>
         </div>
-        {studentId && <UploadDocumentDialog studentId={studentId} />}
+        {isOwnView && studentId && <UploadDocumentDialog studentId={studentId} />}
       </div>
 
       {error && (
@@ -82,7 +97,15 @@ export function DocumentsPage() {
                 )}
                 {documents?.map((doc) => (
                   <TableRow key={doc.id}>
-                    <TableCell className="font-medium">{doc.originalFileName}</TableCell>
+                    <TableCell className="font-medium">
+                      <button
+                        type="button"
+                        onClick={() => onView(doc)}
+                        className="text-left hover:underline"
+                      >
+                        {doc.originalFileName}
+                      </button>
+                    </TableCell>
                     <TableCell>{DOCUMENT_TYPE_LABELS[doc.documentType]}</TableCell>
                     <TableCell className="tabular-nums">{formatSize(doc.sizeBytes)}</TableCell>
                     <TableCell><Badge variant="secondary">{doc.status}</Badge></TableCell>

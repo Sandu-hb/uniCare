@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/card'
 import { useAppointmentQueue } from '@/features/appointments/hooks'
 import { useAuth } from '@/features/auth/auth-context'
-import { ROLES } from '@/config/roles'
+import { ROLES, type Role } from '@/config/roles'
 import { useStudentAccounts } from '@/features/students/hooks'
 import { useQueue } from '@/features/visits/hooks'
 import { VISIT_STATUS_LABELS } from '@/features/visits/types'
@@ -38,19 +38,27 @@ function StatCard({ icon, label, value, hint }: {
   )
 }
 
+function myQueueRoute(hasRole: (...roles: Role[]) => boolean): string {
+  if (hasRole(ROLES.LabStaff)) return '/staff/lab-queue'
+  if (hasRole(ROLES.PharmacyStaff)) return '/staff/pharmacy-queue'
+  return '/staff/queue'
+}
+
 export function StaffDashboardPage() {
   const { user, hasRole } = useAuth()
   const isAdmin = hasRole(ROLES.Admin)
   const today = new Date().toISOString().slice(0, 10)
+  const queueRoute = myQueueRoute(hasRole)
 
-  const { data: nurseQueue } = useQueue('Nurse')
   const { data: doctorQueue } = useQueue('Doctor')
+  const { data: labQueue } = useQueue('Laboratory')
+  const { data: pharmacyQueue } = useQueue('Pharmacy')
   const { data: appointmentsToday } = useAppointmentQueue({ date: today, pageSize: 100 })
   const { data: pending } = useStudentAccounts(
     { status: 'PendingApproval', pageSize: 5 }, isAdmin,
   )
 
-  const queueEntries = [...(nurseQueue ?? []), ...(doctorQueue ?? [])]
+  const queueEntries = [...(doctorQueue ?? []), ...(labQueue ?? []), ...(pharmacyQueue ?? [])]
     .sort((a, b) => a.queueNumber - b.queueNumber)
 
   return (
@@ -66,11 +74,11 @@ export function StaffDashboardPage() {
         <div className="flex gap-2">
           {isAdmin && (
             <Button asChild size="sm" variant="outline">
-              <Link to="/staff/student-accounts">Review approvals</Link>
+              <Link to="/students">Review approvals</Link>
             </Button>
           )}
           <Button asChild size="sm">
-            <Link to="/staff/queue">Open queue</Link>
+            <Link to={queueRoute}>Open queue</Link>
           </Button>
         </div>
       </div>
@@ -102,7 +110,7 @@ export function StaffDashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Today's queue</CardTitle>
-              <Link to="/staff/queue" className="text-xs font-medium text-primary hover:underline">View all</Link>
+              <Link to={queueRoute} className="text-xs font-medium text-primary hover:underline">View all</Link>
             </div>
             <CardDescription>{queueEntries.length} waiting or in progress</CardDescription>
           </CardHeader>
@@ -144,7 +152,7 @@ export function StaffDashboardPage() {
                     <span className="font-mono text-xs text-muted-foreground">{s.registrationNumber}</span>
                   </div>
                   <Button asChild size="sm" variant="outline">
-                    <Link to="/staff/student-accounts">Review</Link>
+                    <Link to="/students">Review</Link>
                   </Button>
                 </div>
               ))}
@@ -157,10 +165,7 @@ export function StaffDashboardPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
               <Button asChild variant="secondary" className="justify-start">
-                <Link to="/staff/appointments"><CalendarDays className="size-4" /> Review appointments</Link>
-              </Button>
-              <Button asChild variant="secondary" className="justify-start">
-                <Link to="/staff/queue"><ClipboardCheck className="size-4" /> Open live queue</Link>
+                <Link to={queueRoute}><ClipboardCheck className="size-4" /> Open live queue</Link>
               </Button>
             </CardContent>
           </Card>

@@ -48,9 +48,3 @@ export async function getAssignableStaff(): Promise<AssignableStaff[]> {
   })
   return data.items
 }
-
-/** The signed-in doctor or nurse's own appointments. */
-export async function getMyStaffAppointments(): Promise<Appointment[]> {
-  const { data } = await apiClient.get<Appointment[]>('/appointments/mine')
-  return data
-}

@@ -33,9 +33,9 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<MedicalVisit> MedicalVisits => Set<MedicalVisit>();
     public DbSet<QueueEntry> QueueEntries => Set<QueueEntry>();
-    public DbSet<VitalSign> VitalSigns => Set<VitalSign>();
     public DbSet<Consultation> Consultations => Set<Consultation>();
     public DbSet<Diagnosis> Diagnoses => Set<Diagnosis>();
+    public DbSet<LabOrder> LabOrders => Set<LabOrder>();
 
     // Pharmacy
     public DbSet<Prescription> Prescriptions => Set<Prescription>();

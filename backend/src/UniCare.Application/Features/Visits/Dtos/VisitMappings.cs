@@ -25,7 +25,6 @@ public static class VisitMappings
             QueueNumber = q.QueueNumber,
             Stage = q.Stage,
             CalledAt = q.CalledAt,
-            HasVitalSign = q.MedicalVisit.VitalSign != null,
             HasConsultation = q.MedicalVisit.Consultation != null,
         };
 }

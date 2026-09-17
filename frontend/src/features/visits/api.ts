@@ -21,11 +21,6 @@ export async function callVisit(id: string): Promise<Visit> {
   return data
 }
 
-export async function advanceVisit(id: string): Promise<Visit> {
-  const { data } = await apiClient.post<Visit>(`/visits/${id}/advance`)
-  return data
-}
-
 export async function abandonVisit(id: string): Promise<Visit> {
   const { data } = await apiClient.post<Visit>(`/visits/${id}/abandon`)
   return data

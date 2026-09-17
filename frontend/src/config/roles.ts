@@ -1,16 +1,16 @@
 /**
- * The eight roles from the SRS. These strings must match the backend's role
- * claims exactly — a typo here silently locks people out of their own pages.
+ * Four roles: a student, and three staff portals. Dentists register as
+ * Doctor (distinguished via Staff.Specialization); the pharmacy and lab
+ * each run off one shared account rather than per-person logins. These
+ * strings must match the backend's role claims exactly — a typo here
+ * silently locks people out of their own pages.
  */
 export const ROLES = {
   Student: 'Student',
   Admin: 'Admin',
-  Nurse: 'Nurse',
   Doctor: 'Doctor',
-  Dentist: 'Dentist',
   LabStaff: 'LabStaff',
   PharmacyStaff: 'PharmacyStaff',
-  SystemAdmin: 'SystemAdmin',
 } as const
 
 export type Role = (typeof ROLES)[keyof typeof ROLES]
@@ -18,16 +18,10 @@ export type Role = (typeof ROLES)[keyof typeof ROLES]
 /** Every role except Student — i.e. anyone who works at the medical center. */
 export const STAFF_ROLES: Role[] = [
   ROLES.Admin,
-  ROLES.Nurse,
   ROLES.Doctor,
-  ROLES.Dentist,
   ROLES.LabStaff,
   ROLES.PharmacyStaff,
-  ROLES.SystemAdmin,
 ]
-
-/** Roles permitted to record clinical findings against a patient. */
-export const CLINICAL_ROLES: Role[] = [ROLES.Nurse, ROLES.Doctor, ROLES.Dentist]
 
 export function isStaffRole(role: Role): boolean {
   return (STAFF_ROLES as string[]).includes(role)

@@ -1,5 +1,5 @@
 import {
-  Activity, Calendar, ClipboardCheck, FlaskConical, Home, ListOrdered, LogOut, Pill,
+  Activity, Calendar, FlaskConical, Home, ListOrdered, LogOut, Pill,
   Users, type LucideIcon,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
@@ -23,18 +23,17 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
       { to: '/students', label: 'Students', icon: Users },
       { to: '/staff/appointments', label: 'Appointments', icon: Calendar, roles: [ROLES.Admin] },
       {
-        to: '/staff/my-appointments', label: 'My appointments', icon: Calendar,
-        roles: [ROLES.Doctor, ROLES.Nurse],
+        to: '/staff/queue', label: 'Doctor queue', icon: ListOrdered,
+        roles: [ROLES.Doctor, ROLES.Admin],
       },
-      { to: '/staff/queue', label: 'Queue', icon: ListOrdered },
-      { label: 'Consultations', icon: ClipboardCheck },
-    ],
-  },
-  {
-    title: 'Pharmacy & Lab',
-    items: [
-      { label: 'Pharmacy', icon: Pill },
-      { label: 'Laboratory', icon: FlaskConical },
+      {
+        to: '/staff/lab-queue', label: 'Laboratory queue', icon: FlaskConical,
+        roles: [ROLES.LabStaff, ROLES.Admin],
+      },
+      {
+        to: '/staff/pharmacy-queue', label: 'Pharmacy queue', icon: Pill,
+        roles: [ROLES.PharmacyStaff, ROLES.Admin],
+      },
     ],
   },
   {

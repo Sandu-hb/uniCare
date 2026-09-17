@@ -6,12 +6,11 @@ namespace UniCare.Application.Features.Staff.Validators;
 
 public class RegisterStaffRequestValidator : AbstractValidator<RegisterStaffRequest>
 {
-    // Admin and SystemAdmin are deliberately excluded — a self-registering caller
-    // must never be able to grant themselves administrative access. Only an
-    // existing admin can create an account with one of those two roles, via
-    // CreateStaffRequest instead.
+    // Admin is deliberately excluded — a self-registering caller must never be
+    // able to grant themselves administrative access. Only an existing admin
+    // can create an Admin account, via CreateStaffRequest instead.
     private static readonly StaffRole[] SelfRegisterableRoles =
-        [StaffRole.Doctor, StaffRole.Nurse, StaffRole.Dentist, StaffRole.LabStaff, StaffRole.PharmacyStaff];
+        [StaffRole.Doctor, StaffRole.LabStaff, StaffRole.PharmacyStaff];
 
     public RegisterStaffRequestValidator()
     {

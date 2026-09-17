@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { useStudents } from '@/features/students/hooks'
+import { useCheckIn } from '@/features/visits/hooks'
 import { useAssignableStaff, useCreateAppointment } from '../hooks'
 
 const MORNING_START = '08:00'
@@ -25,22 +26,30 @@ function isWithinBusinessHours(time: string): boolean {
     (time >= AFTERNOON_START && time <= AFTERNOON_END)
 }
 
-function isWeekday(date: string): boolean {
-  const day = new Date(`${date}T00:00:00`).getDay()
+function isWeekday(date: Date): boolean {
+  const day = date.getDay()
   return day !== 0 && day !== 6
+}
+
+/** "HH:mm", matching what the date input's `type="time"` would have produced. */
+function currentTime(date: Date): string {
+  return date.toTimeString().slice(0, 5)
+}
+
+/** "YYYY-MM-DD" in local time — toISOString() would give the UTC date, which
+ * can be a day off from what the clock on the wall (and the business-hours
+ * check above, also local) actually says. */
+function currentDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /** Mirrors CreateAppointmentRequestValidator on the server. */
 const schema = z.object({
   studentId: z.string().min(1, 'Select a student'),
-  assignedStaffId: z.string().min(1, 'Select a doctor or nurse'),
-  scheduledDate: z.string()
-    .min(1, 'Required')
-    .refine((v) => v >= new Date().toISOString().slice(0, 10), 'Cannot be in the past')
-    .refine(isWeekday, 'The medical centre is closed on weekends'),
-  scheduledTime: z.string()
-    .min(1, 'Required')
-    .refine(isWithinBusinessHours, 'Must be between 8:00 AM–12:30 PM or 1:00 PM–5:00 PM'),
+  assignedStaffId: z.string().min(1, 'Select a doctor'),
   reason: z.string().max(1000).optional(),
 })
 
@@ -52,7 +61,7 @@ export function CreateAppointmentDialog() {
 
   const { data: students } = useStudents({ search: studentSearch || undefined, pageSize: 20 })
   const { data: staff } = useAssignableStaff()
-  const doctorsAndNurses = staff?.filter((s) => s.role === 'Doctor' || s.role === 'Nurse')
+  const doctors = staff?.filter((s) => s.role === 'Doctor')
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -60,20 +69,39 @@ export function CreateAppointmentDialog() {
   // studentId isn't sent in the request body — it's the route param that
   // scopes which student's appointment list useCreateAppointment invalidates.
   const createAppointment = useCreateAppointment(watch('studentId') || '')
+  const checkIn = useCheckIn()
+
+  // Booked for right now — there is no date/time picker. Evaluated on every
+  // render (cheap) so the "closed right now" message stays accurate while
+  // the dialog sits open across a business-hours boundary.
+  const now = new Date()
+  const canBookNow = isWeekday(now) && isWithinBusinessHours(currentTime(now))
 
   function onSubmit(values: FormValues) {
+    const submittedAt = new Date()
     createAppointment.mutate(
       {
         assignedStaffId: values.assignedStaffId,
-        scheduledDate: values.scheduledDate,
-        scheduledTime: values.scheduledTime,
+        scheduledDate: currentDate(submittedAt),
+        scheduledTime: currentTime(submittedAt),
         reason: values.reason,
       },
       {
-        onSuccess: () => {
-          toast.success('Appointment booked')
+        // Booked for "right now" always means the student is already here —
+        // so booking also checks them straight into the doctor's queue,
+        // rather than leaving that as a separate click on the queue page.
+        onSuccess: (appointment) => {
           reset()
           setOpen(false)
+          checkIn.mutate(
+            { studentId: appointment.studentId, request: { appointmentId: appointment.id } },
+            {
+              onSuccess: () => toast.success('Appointment booked and checked in'),
+              onError: (error) => toast.error(
+                `Appointment booked, but check-in failed: ${getApiErrorMessage(error)}`,
+              ),
+            },
+          )
         },
         onError: (error) => toast.error(getApiErrorMessage(error)),
       },
@@ -90,9 +118,16 @@ export function CreateAppointmentDialog() {
         <DialogHeader>
           <DialogTitle>Book an appointment</DialogTitle>
           <DialogDescription>
-            Assign a doctor or nurse and a slot within business hours.
+            Booked for right now — {currentDate(now)} at {currentTime(now)}.
           </DialogDescription>
         </DialogHeader>
+
+        {!canBookNow && (
+          <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            The medical centre is closed right now — appointments can only be booked
+            Monday–Friday, 8:00 AM–12:30 PM or 1:00 PM–5:00 PM.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div className="grid gap-1.5">
@@ -116,38 +151,20 @@ export function CreateAppointmentDialog() {
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="assignedStaffId">Doctor or nurse</Label>
+            <Label htmlFor="assignedStaffId">Doctor</Label>
             <select
               id="assignedStaffId"
               className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
               {...register('assignedStaffId')}
             >
               <option value="">— select —</option>
-              {doctorsAndNurses?.map((s) => (
+              {doctors?.map((s) => (
                 <option key={s.id} value={s.id}>{s.fullName} ({s.role})</option>
               ))}
             </select>
             {errors.assignedStaffId && (
               <p className="text-xs text-destructive">{errors.assignedStaffId.message}</p>
             )}
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <Label htmlFor="scheduledDate">Date</Label>
-              <Input id="scheduledDate" type="date" {...register('scheduledDate')} />
-              {errors.scheduledDate && (
-                <p className="text-xs text-destructive">{errors.scheduledDate.message}</p>
-              )}
-            </div>
-
-            <div className="grid gap-1.5">
-              <Label htmlFor="scheduledTime">Time</Label>
-              <Input id="scheduledTime" type="time" {...register('scheduledTime')} />
-              {errors.scheduledTime && (
-                <p className="text-xs text-destructive">{errors.scheduledTime.message}</p>
-              )}
-            </div>
           </div>
 
           <div className="grid gap-1.5">
@@ -161,8 +178,8 @@ export function CreateAppointmentDialog() {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createAppointment.isPending}>
-              {createAppointment.isPending ? 'Booking…' : 'Book'}
+            <Button type="submit" disabled={createAppointment.isPending || checkIn.isPending || !canBookNow}>
+              {createAppointment.isPending || checkIn.isPending ? 'Booking…' : 'Book & check in'}
             </Button>
           </DialogFooter>
         </form>

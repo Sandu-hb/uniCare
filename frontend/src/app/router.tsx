@@ -1,22 +1,23 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ROLES, STAFF_ROLES } from '@/config/roles'
 import { ROUTES } from '@/config/routes'
-import { MyStaffAppointmentsPage } from '@/features/appointments/MyStaffAppointmentsPage'
 import { StaffAppointmentsPage } from '@/features/appointments/StaffAppointmentsPage'
 import { StudentAppointmentsPage } from '@/features/appointments/StudentAppointmentsPage'
-import { ChooseRolePage } from '@/features/auth/ChooseRolePage'
 import { ForbiddenPage } from '@/features/auth/ForbiddenPage'
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { PendingApprovalPage } from '@/features/auth/PendingApprovalPage'
-import { RegisterStaffPage } from '@/features/auth/RegisterStaffPage'
 import { RegisterStudentPage } from '@/features/auth/RegisterStudentPage'
 import { StaffDashboardPage } from '@/features/dashboard/StaffDashboardPage'
 import { StudentDashboardPage } from '@/features/dashboard/StudentDashboardPage'
+import { LabQueuePage } from '@/features/laboratory/LabQueuePage'
+import { PrescriptionsPage } from '@/features/medical-records/PrescriptionsPage'
+import { ReportsPage } from '@/features/medical-records/ReportsPage'
 import { MedicalProfilePage } from '@/features/medical-profiles/MedicalProfilePage'
+import { PharmacyQueuePage } from '@/features/pharmacy/PharmacyQueuePage'
 import { StudentsPage } from '@/features/students/StudentsPage'
 import { SystemStatusPage } from '@/features/system/SystemStatusPage'
-import { QueuePage } from '@/features/visits/QueuePage'
+import { DoctorQueuePage } from '@/features/visits/DoctorQueuePage'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { StaffLayout } from '@/layouts/StaffLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
@@ -37,9 +38,8 @@ export function AppRouter() {
           <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
         </Route>
 
-        <Route path={ROUTES.register} element={<ChooseRolePage />} />
+        <Route path={ROUTES.register} element={<Navigate to={ROUTES.registerStudent} replace />} />
         <Route path={ROUTES.registerStudent} element={<RegisterStudentPage />} />
-        <Route path={ROUTES.registerStaff} element={<RegisterStaffPage />} />
       </Route>
 
       <Route path={ROUTES.pendingApproval} element={<PendingApprovalPage />} />
@@ -53,14 +53,21 @@ export function AppRouter() {
           {/* StudentsPage/MedicalProfilePage link to these exact paths directly, not via ROUTES.staff.students */}
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
-          <Route path={ROUTES.staff.queue} element={<QueuePage />} />
 
           <Route element={<ProtectedRoute allowedRoles={[ROLES.Admin]} />}>
             <Route path={ROUTES.staff.appointments} element={<StaffAppointmentsPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.Doctor, ROLES.Nurse]} />}>
-            <Route path={ROUTES.staff.myAppointments} element={<MyStaffAppointmentsPage />} />
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.Doctor, ROLES.Admin]} />}>
+            <Route path={ROUTES.staff.queue} element={<DoctorQueuePage />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.LabStaff, ROLES.Admin]} />}>
+            <Route path={ROUTES.staff.labQueue} element={<LabQueuePage />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.PharmacyStaff, ROLES.Admin]} />}>
+            <Route path={ROUTES.staff.pharmacyQueue} element={<PharmacyQueuePage />} />
           </Route>
         </Route>
       </Route>
@@ -75,7 +82,8 @@ export function AppRouter() {
           <Route path={ROUTES.student.appointments} element={<StudentAppointmentsPage />} />
           <Route path={ROUTES.student.medicalProfile} element={<MedicalProfilePage />} />
           <Route path={ROUTES.student.documents} element={<DocumentsPage />} />
-          {/* TODO: prescriptions, reports */}
+          <Route path={ROUTES.student.prescriptions} element={<PrescriptionsPage />} />
+          <Route path={ROUTES.student.reports} element={<ReportsPage />} />
         </Route>
       </Route>
 

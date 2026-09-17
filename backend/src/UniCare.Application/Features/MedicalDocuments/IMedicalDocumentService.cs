@@ -21,4 +21,12 @@ public interface IMedicalDocumentService
 
     Task<IReadOnlyList<MedicalDocumentDto>> GetForStudentAsync(
         Guid studentId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Opens the file itself for reading — null if no document with this id
+    /// exists. The caller must separately check the returned document's
+    /// StudentId against the route's studentId before trusting this.
+    /// </summary>
+    Task<(MedicalDocumentDto Document, Stream Content)?> GetContentAsync(
+        Guid documentId, CancellationToken cancellationToken = default);
 }

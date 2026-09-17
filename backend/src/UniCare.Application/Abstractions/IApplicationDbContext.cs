@@ -16,9 +16,9 @@ public interface IApplicationDbContext
     DbSet<Appointment> Appointments { get; }
     DbSet<MedicalVisit> MedicalVisits { get; }
     DbSet<QueueEntry> QueueEntries { get; }
-    DbSet<VitalSign> VitalSigns { get; }
     DbSet<Consultation> Consultations { get; }
     DbSet<Diagnosis> Diagnoses { get; }
+    DbSet<LabOrder> LabOrders { get; }
     DbSet<Prescription> Prescriptions { get; }
     DbSet<PrescriptionItem> PrescriptionItems { get; }
     DbSet<Medicine> Medicines { get; }
