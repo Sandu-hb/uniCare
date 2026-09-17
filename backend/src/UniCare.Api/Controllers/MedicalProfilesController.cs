@@ -23,7 +23,7 @@ public class MedicalProfilesController(
     IValidator<UpsertMedicalProfileRequest> upsertValidator,
     IValidator<RejectMedicalProfileRequest> rejectValidator) : ControllerBase
 {
-    private const string ReviewerRoles = $"{AppRoles.Doctor},{AppRoles.Nurse},{AppRoles.Admin}";
+    private const string ReviewerRoles = $"{AppRoles.Doctor},{AppRoles.Admin}";
 
     private Guid CurrentApplicationUserId =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
