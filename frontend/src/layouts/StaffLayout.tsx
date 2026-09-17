@@ -22,9 +22,18 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     items: [
       { to: '/students', label: 'Students', icon: Users },
       { to: '/staff/appointments', label: 'Appointments', icon: Calendar, roles: [ROLES.Admin] },
-      { to: '/staff/queue', label: 'My queue', icon: ListOrdered, roles: [ROLES.Doctor] },
-      { to: '/staff/lab-queue', label: 'Laboratory queue', icon: FlaskConical, roles: [ROLES.LabStaff] },
-      { to: '/staff/pharmacy-queue', label: 'Pharmacy queue', icon: Pill, roles: [ROLES.PharmacyStaff] },
+      {
+        to: '/staff/queue', label: 'Doctor queue', icon: ListOrdered,
+        roles: [ROLES.Doctor, ROLES.Admin],
+      },
+      {
+        to: '/staff/lab-queue', label: 'Laboratory queue', icon: FlaskConical,
+        roles: [ROLES.LabStaff, ROLES.Admin],
+      },
+      {
+        to: '/staff/pharmacy-queue', label: 'Pharmacy queue', icon: Pill,
+        roles: [ROLES.PharmacyStaff, ROLES.Admin],
+      },
     ],
   },
   {
