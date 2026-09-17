@@ -2,6 +2,7 @@ namespace UniCare.Application.Features.Appointments.Dtos;
 
 public record CreateAppointmentRequest
 {
+    public required Guid AssignedStaffId { get; init; }
     public required DateOnly ScheduledDate { get; init; }
     public required TimeOnly ScheduledTime { get; init; }
     public string? Reason { get; init; }
