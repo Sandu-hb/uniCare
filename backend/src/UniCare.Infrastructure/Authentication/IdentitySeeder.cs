@@ -9,7 +9,7 @@ using UniCare.Infrastructure.Data;
 namespace UniCare.Infrastructure.Authentication;
 
 /// <summary>
-/// Development convenience: seeds the same three demo accounts the frontend's
+/// Development convenience: seeds the same demo accounts the frontend's
 /// mock auth ships with (see frontend/src/features/auth/mock-api.ts), so
 /// switching VITE_USE_MOCK_AUTH to "false" logs in against real data without any
 /// manual setup. Never runs outside Development — see Program.cs.
@@ -65,21 +65,37 @@ public static class IdentitySeeder
             });
         }
 
-        // Pending approval: the account can authenticate (so the frontend can route it
-        // to /pending-approval) but IsActive is false — an admin has not signed off yet.
-        var nurse = await EnsureUserAsync(
-            userManager, "nurse@uom.lk", "Passw0rd", "Kavindi Silva", AppRoles.Nurse, AccountStatus.PendingApproval);
+        // One shared account per portal — the university runs a single pharmacy
+        // counter and a single lab bench, not per-person logins for either.
+        var pharmacy = await EnsureUserAsync(
+            userManager, "pharmacy@uom.lk", "Passw0rd", "Pharmacy Counter", AppRoles.PharmacyStaff, AccountStatus.Active);
 
-        if (!await db.Staff.AnyAsync(s => s.ApplicationUserId == nurse.Id))
+        if (!await db.Staff.AnyAsync(s => s.ApplicationUserId == pharmacy.Id))
         {
             db.Staff.Add(new Staff
             {
-                ApplicationUserId = nurse.Id,
+                ApplicationUserId = pharmacy.Id,
                 StaffNumber = "STF-0002",
-                FullName = nurse.FullName,
-                Email = nurse.Email!,
-                Role = StaffRole.Nurse,
-                IsActive = false,
+                FullName = pharmacy.FullName,
+                Email = pharmacy.Email!,
+                Role = StaffRole.PharmacyStaff,
+                IsActive = true,
+            });
+        }
+
+        var lab = await EnsureUserAsync(
+            userManager, "lab@uom.lk", "Passw0rd", "Laboratory Bench", AppRoles.LabStaff, AccountStatus.Active);
+
+        if (!await db.Staff.AnyAsync(s => s.ApplicationUserId == lab.Id))
+        {
+            db.Staff.Add(new Staff
+            {
+                ApplicationUserId = lab.Id,
+                StaffNumber = "STF-0004",
+                FullName = lab.FullName,
+                Email = lab.Email!,
+                Role = StaffRole.LabStaff,
+                IsActive = true,
             });
         }
 
