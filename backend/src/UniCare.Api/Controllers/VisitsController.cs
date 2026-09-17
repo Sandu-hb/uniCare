@@ -60,6 +60,20 @@ public class VisitsController(
         return Ok(await visitService.GetQueueAsync(stage, assignedStaffId, cancellationToken));
     }
 
+    /// <summary>Staff may view any student's history; a student may only view their own.</summary>
+    [HttpGet("api/students/{studentId:guid}/visit-history")]
+    public async Task<ActionResult<IReadOnlyList<VisitHistoryDto>>> GetHistory(
+        Guid studentId, CancellationToken cancellationToken)
+    {
+        if (!IsStaff() &&
+            !await studentService.IsOwnedByApplicationUserAsync(studentId, CurrentApplicationUserId, cancellationToken))
+        {
+            return Forbid();
+        }
+
+        return Ok(await visitService.GetHistoryForStudentAsync(studentId, cancellationToken));
+    }
+
     [HttpGet("api/visits/{id:guid}")]
     public async Task<ActionResult<VisitDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
