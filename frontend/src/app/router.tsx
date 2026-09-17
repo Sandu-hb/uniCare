@@ -13,6 +13,8 @@ import { RegisterStudentPage } from '@/features/auth/RegisterStudentPage'
 import { StaffDashboardPage } from '@/features/dashboard/StaffDashboardPage'
 import { StudentDashboardPage } from '@/features/dashboard/StudentDashboardPage'
 import { LabQueuePage } from '@/features/laboratory/LabQueuePage'
+import { PrescriptionsPage } from '@/features/medical-records/PrescriptionsPage'
+import { ReportsPage } from '@/features/medical-records/ReportsPage'
 import { MedicalProfilePage } from '@/features/medical-profiles/MedicalProfilePage'
 import { PharmacyQueuePage } from '@/features/pharmacy/PharmacyQueuePage'
 import { StudentsPage } from '@/features/students/StudentsPage'
@@ -83,7 +85,8 @@ export function AppRouter() {
           <Route path={ROUTES.student.appointments} element={<StudentAppointmentsPage />} />
           <Route path={ROUTES.student.medicalProfile} element={<MedicalProfilePage />} />
           <Route path={ROUTES.student.documents} element={<DocumentsPage />} />
-          {/* TODO: prescriptions, reports */}
+          <Route path={ROUTES.student.prescriptions} element={<PrescriptionsPage />} />
+          <Route path={ROUTES.student.reports} element={<ReportsPage />} />
         </Route>
       </Route>
 
