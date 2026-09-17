@@ -3,12 +3,10 @@ import { ROLES, STAFF_ROLES } from '@/config/roles'
 import { ROUTES } from '@/config/routes'
 import { StaffAppointmentsPage } from '@/features/appointments/StaffAppointmentsPage'
 import { StudentAppointmentsPage } from '@/features/appointments/StudentAppointmentsPage'
-import { ChooseRolePage } from '@/features/auth/ChooseRolePage'
 import { ForbiddenPage } from '@/features/auth/ForbiddenPage'
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { PendingApprovalPage } from '@/features/auth/PendingApprovalPage'
-import { RegisterStaffPage } from '@/features/auth/RegisterStaffPage'
 import { RegisterStudentPage } from '@/features/auth/RegisterStudentPage'
 import { StaffDashboardPage } from '@/features/dashboard/StaffDashboardPage'
 import { StudentDashboardPage } from '@/features/dashboard/StudentDashboardPage'
@@ -40,9 +38,8 @@ export function AppRouter() {
           <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
         </Route>
 
-        <Route path={ROUTES.register} element={<ChooseRolePage />} />
+        <Route path={ROUTES.register} element={<Navigate to={ROUTES.registerStudent} replace />} />
         <Route path={ROUTES.registerStudent} element={<RegisterStudentPage />} />
-        <Route path={ROUTES.registerStaff} element={<RegisterStaffPage />} />
       </Route>
 
       <Route path={ROUTES.pendingApproval} element={<PendingApprovalPage />} />
