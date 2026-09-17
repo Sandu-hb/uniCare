@@ -12,16 +12,13 @@ public static class AppRoles
 {
     public const string Student = "Student";
     public const string Admin = nameof(StaffRole.Admin);
-    public const string Nurse = nameof(StaffRole.Nurse);
     public const string Doctor = nameof(StaffRole.Doctor);
-    public const string Dentist = nameof(StaffRole.Dentist);
     public const string LabStaff = nameof(StaffRole.LabStaff);
     public const string PharmacyStaff = nameof(StaffRole.PharmacyStaff);
-    public const string SystemAdmin = nameof(StaffRole.SystemAdmin);
 
     public static readonly IReadOnlyList<string> Staff =
     [
-        Admin, Nurse, Doctor, Dentist, LabStaff, PharmacyStaff, SystemAdmin,
+        Admin, Doctor, LabStaff, PharmacyStaff,
     ];
 
     public static readonly IReadOnlyList<string> All = [Student, .. Staff];
