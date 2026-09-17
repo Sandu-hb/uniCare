@@ -53,9 +53,9 @@ public class StudentsController(
     public async Task<ActionResult<StudentAccountDto>> Suspend(Guid id, CancellationToken cancellationToken) =>
         Ok(await studentAccountService.SuspendAsync(id, cancellationToken));
 
-    /// <summary>Admin-only: the approval queue, filterable by status and name/registration number.</summary>
+    /// <summary>Staff-only: student records with their account status. Activate/Suspend stay Admin-only.</summary>
     [HttpGet("accounts")]
-    [Authorize(Roles = AppRoles.Admin)]
+    [Authorize]
     public async Task<ActionResult<PagedResult<StudentAccountDto>>> SearchAccounts(
         [FromQuery] AccountStatus? status,
         [FromQuery] string? search,
@@ -63,6 +63,11 @@ public class StudentsController(
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
+        if (!AppRoles.Staff.Any(User.IsInRole))
+        {
+            return Forbid();
+        }
+
         return Ok(await studentAccountService.SearchAsync(status, search, page, pageSize, cancellationToken));
     }
 
