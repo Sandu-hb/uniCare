@@ -54,12 +54,8 @@ export type RegisterStudentFormValues = z.infer<typeof registerStudentSchema>
 
 export const CLINICAL_ROLE_OPTIONS = [
   { value: 'Doctor', label: 'Medical Officer / General Physician' },
-  { value: 'Dentist', label: 'Dental Surgeon / Dentist' },
-  { value: 'Nurse', label: 'Nursing Officer / Staff Nurse' },
   { value: 'PharmacyStaff', label: 'Pharmacist / Pharmacy Staff' },
   { value: 'LabStaff', label: 'Laboratory Technician / Lab Staff' },
-  { value: 'Admin', label: 'Medical Centre Administrator' },
-  { value: 'SystemAdmin', label: 'System Administrator' },
 ] as const
 
 export const registerStaffSchema = z

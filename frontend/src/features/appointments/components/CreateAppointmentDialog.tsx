@@ -33,7 +33,7 @@ function isWeekday(date: string): boolean {
 /** Mirrors CreateAppointmentRequestValidator on the server. */
 const schema = z.object({
   studentId: z.string().min(1, 'Select a student'),
-  assignedStaffId: z.string().min(1, 'Select a doctor or nurse'),
+  assignedStaffId: z.string().min(1, 'Select a doctor'),
   scheduledDate: z.string()
     .min(1, 'Required')
     .refine((v) => v >= new Date().toISOString().slice(0, 10), 'Cannot be in the past')
@@ -52,7 +52,7 @@ export function CreateAppointmentDialog() {
 
   const { data: students } = useStudents({ search: studentSearch || undefined, pageSize: 20 })
   const { data: staff } = useAssignableStaff()
-  const doctorsAndNurses = staff?.filter((s) => s.role === 'Doctor' || s.role === 'Nurse')
+  const doctors = staff?.filter((s) => s.role === 'Doctor')
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -90,7 +90,7 @@ export function CreateAppointmentDialog() {
         <DialogHeader>
           <DialogTitle>Book an appointment</DialogTitle>
           <DialogDescription>
-            Assign a doctor or nurse and a slot within business hours.
+            Assign a doctor and a slot within business hours.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,14 +116,14 @@ export function CreateAppointmentDialog() {
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="assignedStaffId">Doctor or nurse</Label>
+            <Label htmlFor="assignedStaffId">Doctor</Label>
             <select
               id="assignedStaffId"
               className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
               {...register('assignedStaffId')}
             >
               <option value="">— select —</option>
-              {doctorsAndNurses?.map((s) => (
+              {doctors?.map((s) => (
                 <option key={s.id} value={s.id}>{s.fullName} ({s.role})</option>
               ))}
             </select>
