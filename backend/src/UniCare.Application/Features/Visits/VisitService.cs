@@ -206,4 +206,56 @@ public class VisitService(IApplicationDbContext db) : IVisitService
 
         return (visit, queueEntry);
     }
+
+    public async Task<IReadOnlyList<VisitHistoryDto>> GetHistoryForStudentAsync(
+        Guid studentId, CancellationToken cancellationToken = default) =>
+        await db.MedicalVisits
+            .AsNoTracking()
+            .Where(v => v.StudentId == studentId)
+            .OrderByDescending(v => v.CheckedInAt)
+            .Select(v => new VisitHistoryDto
+            {
+                Id = v.Id,
+                CheckedInAt = v.CheckedInAt,
+                CompletedAt = v.CompletedAt,
+                Status = v.Status.ToString(),
+
+                DoctorName = v.Consultation == null ? null : v.Consultation.DoctorStaff.FullName,
+                Symptoms = v.Consultation == null ? null : v.Consultation.Symptoms,
+                ExaminationFindings = v.Consultation == null ? null : v.Consultation.ExaminationFindings,
+                Treatment = v.Consultation == null ? null : v.Consultation.Treatment,
+                FollowUpInstructions = v.Consultation == null ? null : v.Consultation.FollowUpInstructions,
+                Diagnoses = v.Consultation == null
+                    ? new List<VisitHistoryDiagnosisDto>()
+                    : v.Consultation.Diagnoses
+                        .Select(d => new VisitHistoryDiagnosisDto
+                        {
+                            Description = d.Description,
+                            IcdCode = d.IcdCode,
+                            IsPrimary = d.IsPrimary,
+                        })
+                        .ToList(),
+
+                LabRequestDetails = v.LabOrder == null ? null : v.LabOrder.RequestDetails,
+                LabResultNotes = v.LabOrder == null ? null : v.LabOrder.ResultNotes,
+                LabStatus = v.LabOrder == null ? null : v.LabOrder.Status.ToString(),
+
+                PrescriptionStatus = v.Consultation == null || v.Consultation.Prescription == null
+                    ? null
+                    : v.Consultation.Prescription.Status.ToString(),
+                PrescriptionItems = v.Consultation == null || v.Consultation.Prescription == null
+                    ? new List<VisitHistoryPrescriptionItemDto>()
+                    : v.Consultation.Prescription.Items
+                        .Select(i => new VisitHistoryPrescriptionItemDto
+                        {
+                            MedicineName = i.Medicine.Name,
+                            Dosage = i.Dosage,
+                            Frequency = i.Frequency,
+                            DurationDays = i.DurationDays,
+                            Quantity = i.Quantity,
+                            Instructions = i.Instructions,
+                        })
+                        .ToList(),
+            })
+            .ToListAsync(cancellationToken);
 }
