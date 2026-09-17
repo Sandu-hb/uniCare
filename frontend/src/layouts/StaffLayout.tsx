@@ -1,6 +1,6 @@
 import {
   Activity, Calendar, ClipboardCheck, FlaskConical, Home, ListOrdered, LogOut, Pill,
-  ShieldCheck, Users, type LucideIcon,
+  Users, type LucideIcon,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
@@ -21,7 +21,11 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     title: 'Patient Care',
     items: [
       { to: '/students', label: 'Students', icon: Users },
-      { to: '/staff/appointments', label: 'Appointments', icon: Calendar },
+      { to: '/staff/appointments', label: 'Appointments', icon: Calendar, roles: [ROLES.Admin] },
+      {
+        to: '/staff/my-appointments', label: 'My appointments', icon: Calendar,
+        roles: [ROLES.Doctor, ROLES.Nurse],
+      },
       { to: '/staff/queue', label: 'Queue', icon: ListOrdered },
       { label: 'Consultations', icon: ClipboardCheck },
     ],
@@ -36,7 +40,6 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
   {
     title: 'Administration',
     items: [
-      { to: '/staff/student-accounts', label: 'Student approvals', icon: ShieldCheck, roles: [ROLES.Admin] },
       { to: '/system-status', label: 'System status', icon: Activity },
     ],
   },
@@ -89,7 +92,7 @@ export function StaffLayout() {
                 </span>
                 {items.map((item) => {
                   const Icon = item.icon
-                  const badge = item.label === 'Student approvals' ? pending?.totalCount : undefined
+                  const badge = item.label === 'Students' && isAdmin ? pending?.totalCount : undefined
 
                   if (!item.to) {
                     return (
