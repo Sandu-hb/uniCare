@@ -1,15 +1,14 @@
 /** Mirrors UniCare.Domain.Enums.VisitStatus. */
 export type VisitStatus =
-  | 'CheckedIn' | 'WithNurse' | 'AwaitingDoctor' | 'WithDoctor' | 'Completed' | 'Abandoned'
+  | 'CheckedIn' | 'AwaitingLab' | 'AwaitingPharmacy' | 'Completed' | 'Abandoned'
 
-/** Mirrors UniCare.Domain.Enums.QueueStage. Pharmacy/Laboratory are reserved — unreachable until those features exist. */
-export type QueueStage = 'Nurse' | 'Doctor' | 'Pharmacy' | 'Laboratory'
+/** Mirrors UniCare.Domain.Enums.QueueStage. */
+export type QueueStage = 'Doctor' | 'Laboratory' | 'Pharmacy'
 
 export const VISIT_STATUS_LABELS: Record<VisitStatus, string> = {
   CheckedIn: 'Checked in',
-  WithNurse: 'With nurse',
-  AwaitingDoctor: 'Awaiting doctor',
-  WithDoctor: 'With doctor',
+  AwaitingLab: 'Awaiting lab',
+  AwaitingPharmacy: 'Awaiting pharmacy',
   Completed: 'Completed',
   Abandoned: 'Left without being seen',
 }
@@ -27,7 +26,6 @@ export interface Visit {
   queueNumber: number
   stage: QueueStage
   calledAt: string | null
-  hasVitalSign: boolean
   hasConsultation: boolean
 }
 
