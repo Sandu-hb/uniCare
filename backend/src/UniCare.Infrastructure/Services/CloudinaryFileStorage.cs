@@ -5,15 +5,15 @@ using UniCare.Application.Abstractions;
 namespace UniCare.Infrastructure.Services;
 
 /// <summary>
-/// Stores files in Cloudinary under "private" delivery — never the public
-/// default. A public URL would mean anyone who saw or guessed the link could
-/// open a student's hospital report with no login at all. "private" (not
-/// "authenticated") specifically: this account's Cloudinary configuration
-/// rejects plain signed URLs for "authenticated"-type resources with a 401 —
-/// confirmed even Cloudinary's own Admin-API-issued signed URL for an
-/// existing "authenticated" resource 401s — while "private" uses the same
-/// signed-URL delivery without whatever extra account-level restriction
-/// applies to "authenticated".
+/// Stores files in Cloudinary under plain "upload" (public) delivery — not
+/// "private"/"authenticated". Both of those 401 on this account's free tier
+/// with "x-cld-error: deny or ACL failure", confirmed even against
+/// Cloudinary's own Admin-API-issued signed URLs, so their ACL layer isn't
+/// usable here. Access control instead lives entirely in this app:
+/// MedicalDocumentsController checks staff-or-owner before ever calling
+/// OpenReadAsync, the storage key is a GUID (never guessable) and is never
+/// returned to the client (see MedicalDocumentDto — no StorageKey field) —
+/// only this server ever sees the Cloudinary URL.
 /// </summary>
 public class CloudinaryFileStorage : IFileStorage
 {
@@ -43,7 +43,7 @@ public class CloudinaryFileStorage : IFileStorage
         {
             File = new FileDescription(publicId, content),
             PublicId = publicId,
-            Type = "private",   // not "upload" — that would be public
+            Type = "upload",
             Overwrite = false,
         };
 
@@ -59,21 +59,14 @@ public class CloudinaryFileStorage : IFileStorage
 
     public async Task<Stream> OpenReadAsync(string storageKey, CancellationToken cancellationToken = default)
     {
-        // Signed and short-lived on purpose — generated only at the moment
-        // something actually needs to read the file, never stored.
-        //
-        // NOTE: this exact fluent chain has moved between CloudinaryDotNet
-        // versions. Type `_cloudinary.` and let IntelliSense confirm the real
-        // one rather than trusting this line blindly.
-        var signedUrl = _cloudinary.Api
+        var url = _cloudinary.Api
             .UrlImgUp
             .ResourceType("raw")
-            .Type("private")
-            .Signed(true)
+            .Type("upload")
             .BuildUrl(storageKey);
 
         using var http = new HttpClient();
-        var bytes = await http.GetByteArrayAsync(signedUrl, cancellationToken);
+        var bytes = await http.GetByteArrayAsync(url, cancellationToken);
         return new MemoryStream(bytes);
     }
 
@@ -82,7 +75,7 @@ public class CloudinaryFileStorage : IFileStorage
         var result = await _cloudinary.DestroyAsync(new DeletionParams(storageKey)
         {
             ResourceType = ResourceType.Raw,
-            Type = "private",
+            Type = "upload",
         });
 
         if (result.Error is not null)
