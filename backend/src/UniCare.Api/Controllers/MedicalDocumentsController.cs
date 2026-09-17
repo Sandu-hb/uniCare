@@ -36,6 +36,29 @@ public class MedicalDocumentsController(
         return Ok(await documentService.GetForStudentAsync(studentId, cancellationToken));
     }
 
+    /// <summary>Same access rule as the list: staff may read any student's document, the owner their own.</summary>
+    [HttpGet("{documentId:guid}/content")]
+    public async Task<IActionResult> GetContent(
+        Guid studentId, Guid documentId, CancellationToken cancellationToken)
+    {
+        if (!IsStaff() &&
+            !await studentService.IsOwnedByApplicationUserAsync(studentId, CurrentApplicationUserId, cancellationToken))
+        {
+            return Forbid();
+        }
+
+        var result = await documentService.GetContentAsync(documentId, cancellationToken);
+        if (result is null || result.Value.Document.StudentId != studentId)
+        {
+            return NotFound();
+        }
+
+        // No filename argument — that would set Content-Disposition: attachment
+        // and force a download; omitting it lets the browser render the file
+        // (PDF/image) inline, which is what "open and read it" needs.
+        return File(result.Value.Content, result.Value.Document.ContentType);
+    }
+
     // [FromForm] because this is a multipart request — a file plus a field —
     // not JSON. [ApiController]'s automatic model binding cannot infer that
     // for a mixed file+data body, so it must be stated explicitly.
