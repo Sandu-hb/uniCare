@@ -2,8 +2,11 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using UniCare.Application.Features.Appointments;
 using UniCare.Application.Features.Consultations;
+using UniCare.Application.Features.Laboratory;
 using UniCare.Application.Features.MedicalDocuments;
 using UniCare.Application.Features.MedicalProfiles;
+using UniCare.Application.Features.Medicines;
+using UniCare.Application.Features.Pharmacy;
 using UniCare.Application.Features.Students;
 using UniCare.Application.Features.Visits;
 
@@ -25,6 +28,9 @@ public static class DependencyInjection
         services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<IVisitService, VisitService>();
         services.AddScoped<IConsultationService, ConsultationService>();
+        services.AddScoped<ILabOrderService, LabOrderService>();
+        services.AddScoped<IPharmacyService, PharmacyService>();
+        services.AddScoped<IMedicineService, MedicineService>();
 
         return services;
     }
