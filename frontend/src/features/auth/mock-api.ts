@@ -42,6 +42,22 @@ const accounts: MockAccount[] = [
     roles: [ROLES.Nurse],
     status: 'PendingApproval',
   },
+  {
+    id: 'u-admin-1',
+    email: 'admin@uom.lk',
+    password: 'Passw0rd',
+    fullName: 'Priyantha Bandara',
+    roles: [ROLES.Admin],
+    status: 'Active',
+  },
+  {
+    id: 'u-sysadmin-1',
+    email: 'systemadmin@uom.lk',
+    password: 'Passw0rd',
+    fullName: 'System Administrator',
+    roles: [ROLES.SystemAdmin],
+    status: 'Active',
+  },
 ]
 
 export class AuthApiError extends Error {
