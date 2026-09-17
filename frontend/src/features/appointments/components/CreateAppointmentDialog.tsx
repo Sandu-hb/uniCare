@@ -25,22 +25,30 @@ function isWithinBusinessHours(time: string): boolean {
     (time >= AFTERNOON_START && time <= AFTERNOON_END)
 }
 
-function isWeekday(date: string): boolean {
-  const day = new Date(`${date}T00:00:00`).getDay()
+function isWeekday(date: Date): boolean {
+  const day = date.getDay()
   return day !== 0 && day !== 6
+}
+
+/** "HH:mm", matching what the date input's `type="time"` would have produced. */
+function currentTime(date: Date): string {
+  return date.toTimeString().slice(0, 5)
+}
+
+/** "YYYY-MM-DD" in local time — toISOString() would give the UTC date, which
+ * can be a day off from what the clock on the wall (and the business-hours
+ * check above, also local) actually says. */
+function currentDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /** Mirrors CreateAppointmentRequestValidator on the server. */
 const schema = z.object({
   studentId: z.string().min(1, 'Select a student'),
   assignedStaffId: z.string().min(1, 'Select a doctor'),
-  scheduledDate: z.string()
-    .min(1, 'Required')
-    .refine((v) => v >= new Date().toISOString().slice(0, 10), 'Cannot be in the past')
-    .refine(isWeekday, 'The medical centre is closed on weekends'),
-  scheduledTime: z.string()
-    .min(1, 'Required')
-    .refine(isWithinBusinessHours, 'Must be between 8:00 AM–12:30 PM or 1:00 PM–5:00 PM'),
   reason: z.string().max(1000).optional(),
 })
 
@@ -61,12 +69,19 @@ export function CreateAppointmentDialog() {
   // scopes which student's appointment list useCreateAppointment invalidates.
   const createAppointment = useCreateAppointment(watch('studentId') || '')
 
+  // Booked for right now — there is no date/time picker. Evaluated on every
+  // render (cheap) so the "closed right now" message stays accurate while
+  // the dialog sits open across a business-hours boundary.
+  const now = new Date()
+  const canBookNow = isWeekday(now) && isWithinBusinessHours(currentTime(now))
+
   function onSubmit(values: FormValues) {
+    const submittedAt = new Date()
     createAppointment.mutate(
       {
         assignedStaffId: values.assignedStaffId,
-        scheduledDate: values.scheduledDate,
-        scheduledTime: values.scheduledTime,
+        scheduledDate: currentDate(submittedAt),
+        scheduledTime: currentTime(submittedAt),
         reason: values.reason,
       },
       {
@@ -90,9 +105,16 @@ export function CreateAppointmentDialog() {
         <DialogHeader>
           <DialogTitle>Book an appointment</DialogTitle>
           <DialogDescription>
-            Assign a doctor and a slot within business hours.
+            Booked for right now — {currentDate(now)} at {currentTime(now)}.
           </DialogDescription>
         </DialogHeader>
+
+        {!canBookNow && (
+          <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+            The medical centre is closed right now — appointments can only be booked
+            Monday–Friday, 8:00 AM–12:30 PM or 1:00 PM–5:00 PM.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div className="grid gap-1.5">
@@ -132,24 +154,6 @@ export function CreateAppointmentDialog() {
             )}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <Label htmlFor="scheduledDate">Date</Label>
-              <Input id="scheduledDate" type="date" {...register('scheduledDate')} />
-              {errors.scheduledDate && (
-                <p className="text-xs text-destructive">{errors.scheduledDate.message}</p>
-              )}
-            </div>
-
-            <div className="grid gap-1.5">
-              <Label htmlFor="scheduledTime">Time</Label>
-              <Input id="scheduledTime" type="time" {...register('scheduledTime')} />
-              {errors.scheduledTime && (
-                <p className="text-xs text-destructive">{errors.scheduledTime.message}</p>
-              )}
-            </div>
-          </div>
-
           <div className="grid gap-1.5">
             <Label htmlFor="reason">Reason (optional)</Label>
             <Textarea id="reason" rows={3} placeholder="e.g. Recurring headaches"
@@ -161,7 +165,7 @@ export function CreateAppointmentDialog() {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createAppointment.isPending}>
+            <Button type="submit" disabled={createAppointment.isPending || !canBookNow}>
               {createAppointment.isPending ? 'Booking…' : 'Book'}
             </Button>
           </DialogFooter>
