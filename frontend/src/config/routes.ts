@@ -8,7 +8,6 @@ export const ROUTES = {
   login: '/login',
   register: '/register',
   registerStudent: '/register/student',
-  registerStaff: '/register/staff',
   forgotPassword: '/forgot-password',
   pendingApproval: '/pending-approval',
   forbidden: '/forbidden',
