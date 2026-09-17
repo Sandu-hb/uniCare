@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { clearToken, readToken, writeTokens } from '@/lib/token-storage'
 import * as authApi from './api'
@@ -31,9 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(restoredUser)
         setStatus('authenticated')
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (cancelled) return
-        clearToken()
+        // Only a 401 means the token itself is invalid — clear it. Anything
+        // else (backend unreachable, a 500, a network blip) says nothing
+        // about whether the session is still good, so leave the token in
+        // storage: the next reload, once the server answers, restores it.
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          clearToken()
+        }
         setUser(null)
         setStatus('anonymous')
       })
