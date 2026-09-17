@@ -51,7 +51,8 @@ export function StudentLayout() {
             <NavPill to="/student/medical-profile" label="Medical Profile" />
             <NavPill to="/student/documents" label="Documents" />
             <NavPill to="/student/appointments" label="Appointments" />
-            <NavPill label="Prescriptions" disabled />
+            <NavPill to="/student/prescriptions" label="Prescriptions" />
+            <NavPill to="/student/reports" label="Reports" />
           </nav>
         </div>
 
