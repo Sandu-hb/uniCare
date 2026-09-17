@@ -31,6 +31,15 @@ public class StaffService(
     public async Task<StaffDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await BaseQuery().Where(s => s.Id == id).FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<StaffDto?> GetByApplicationUserIdAsync(
+        Guid applicationUserId, CancellationToken cancellationToken = default)
+    {
+        var staff = await db.Staff.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.ApplicationUserId == applicationUserId, cancellationToken);
+
+        return staff is null ? null : await GetByIdAsync(staff.Id, cancellationToken);
+    }
+
     public async Task<PagedResult<StaffDto>> SearchAsync(
         AccountStatus? status, StaffRole? role, int page, int pageSize,
         CancellationToken cancellationToken = default)
