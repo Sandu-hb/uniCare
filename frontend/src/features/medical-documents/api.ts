@@ -8,6 +8,14 @@ export async function getDocuments(studentId: string): Promise<MedicalDocument[]
   return data
 }
 
+/** Fetches the file itself as a Blob, for opening it in a new tab. */
+export async function getDocumentContent(studentId: string, documentId: string): Promise<Blob> {
+  const { data } = await apiClient.get<Blob>(`${base(studentId)}/${documentId}/content`, {
+    responseType: 'blob',
+  })
+  return data
+}
+
 export async function uploadDocument(
   studentId: string,
   file: File,
