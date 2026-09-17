@@ -20,6 +20,9 @@ public class StudentsController(
     IValidator<UpdateStudentRequest> updateValidator,
     IValidator<RegisterStudentRequest> registerValidator) : ControllerBase
 {
+    private bool IsStaff() => AppRoles.Staff.Any(User.IsInRole);
+
+
     /// <summary>
     /// Creates the account and logs it straight in — see IStudentAccountService
     /// for why a PendingApproval account can safely do that. 200, not 201: the
@@ -81,20 +84,34 @@ public class StudentsController(
         return student is null ? NotFound() : Ok(student);
     }
 
+    /// <summary>Staff-only: any student's academic record by id.</summary>
     [HttpGet("{id:guid}")]
+    [Authorize]
     public async Task<ActionResult<StudentDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
+        if (!IsStaff())
+        {
+            return Forbid();
+        }
+
         var student = await studentService.GetByIdAsync(id, cancellationToken);
         return student is null ? NotFound() : Ok(student);
     }
 
+    /// <summary>Staff-only: the full student roster.</summary>
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<PagedResult<StudentDto>>> Search(
         [FromQuery] string? search,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
+        if (!IsStaff())
+        {
+            return Forbid();
+        }
+
         return Ok(await studentService.SearchAsync(search, page, pageSize, cancellationToken));
     }
 
@@ -121,6 +138,7 @@ public class StudentsController(
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<ActionResult<StudentDto>> Update(
         Guid id, UpdateStudentRequest request, CancellationToken cancellationToken)
     {
