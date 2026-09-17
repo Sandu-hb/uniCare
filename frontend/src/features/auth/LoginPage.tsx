@@ -225,7 +225,7 @@ export function LoginPage() {
         {/* Create account link */}
         <p className="text-center text-xs text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link to={ROUTES.register} className="font-bold text-foreground underline hover:text-primary">
+          <Link to={ROUTES.registerStudent} className="font-bold text-foreground underline hover:text-primary">
             Create one
           </Link>
         </p>
