@@ -31,18 +31,6 @@ export async function searchAppointments(
   return data
 }
 
-export async function approveAppointment(
-  id: string, assignedStaffId?: string | null,
-): Promise<Appointment> {
-  const { data } = await apiClient.post<Appointment>(`/appointments/${id}/approve`, { assignedStaffId })
-  return data
-}
-
-export async function rejectAppointment(id: string, reason: string): Promise<Appointment> {
-  const { data } = await apiClient.post<Appointment>(`/appointments/${id}/reject`, { reason })
-  return data
-}
-
 export async function assignAppointmentStaff(id: string, staffId: string): Promise<Appointment> {
   const { data } = await apiClient.post<Appointment>(`/appointments/${id}/assign`, { staffId })
   return data
@@ -59,4 +47,10 @@ export async function getAssignableStaff(): Promise<AssignableStaff[]> {
     params: { status: 'Active', pageSize: 100 },
   })
   return data.items
+}
+
+/** The signed-in doctor or nurse's own appointments. */
+export async function getMyStaffAppointments(): Promise<Appointment[]> {
+  const { data } = await apiClient.get<Appointment[]>('/appointments/mine')
+  return data
 }
