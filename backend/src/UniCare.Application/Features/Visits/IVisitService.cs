@@ -39,4 +39,9 @@ public interface IVisitService
     Task RouteNextStageAsync(Guid medicalVisitId, CancellationToken cancellationToken = default);
 
     Task<VisitDto> AbandonAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>The student's own full visit history — consultation, diagnoses,
+    /// lab result and prescription per visit, newest first.</summary>
+    Task<IReadOnlyList<VisitHistoryDto>> GetHistoryForStudentAsync(
+        Guid studentId, CancellationToken cancellationToken = default);
 }
