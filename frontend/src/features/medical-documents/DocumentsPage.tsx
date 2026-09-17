@@ -38,7 +38,7 @@ export function DocumentsPage() {
             Hospital-verified documents for AI-assisted record extraction.
           </p>
         </div>
-        {studentId && <UploadDocumentDialog studentId={studentId} />}
+        {isOwnView && studentId && <UploadDocumentDialog studentId={studentId} />}
       </div>
 
       {error && (
