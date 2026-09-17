@@ -5,9 +5,15 @@ using UniCare.Application.Abstractions;
 namespace UniCare.Infrastructure.Services;
 
 /// <summary>
-/// Stores files in Cloudinary under "authenticated" delivery — never the public
+/// Stores files in Cloudinary under "private" delivery — never the public
 /// default. A public URL would mean anyone who saw or guessed the link could
-/// open a student's hospital report with no login at all.
+/// open a student's hospital report with no login at all. "private" (not
+/// "authenticated") specifically: this account's Cloudinary configuration
+/// rejects plain signed URLs for "authenticated"-type resources with a 401 —
+/// confirmed even Cloudinary's own Admin-API-issued signed URL for an
+/// existing "authenticated" resource 401s — while "private" uses the same
+/// signed-URL delivery without whatever extra account-level restriction
+/// applies to "authenticated".
 /// </summary>
 public class CloudinaryFileStorage : IFileStorage
 {
@@ -37,7 +43,7 @@ public class CloudinaryFileStorage : IFileStorage
         {
             File = new FileDescription(publicId, content),
             PublicId = publicId,
-            Type = "authenticated",   // not "upload" — that would be public
+            Type = "private",   // not "upload" — that would be public
             Overwrite = false,
         };
 
@@ -62,7 +68,7 @@ public class CloudinaryFileStorage : IFileStorage
         var signedUrl = _cloudinary.Api
             .UrlImgUp
             .ResourceType("raw")
-            .Type("authenticated")
+            .Type("private")
             .Signed(true)
             .BuildUrl(storageKey);
 
@@ -76,6 +82,7 @@ public class CloudinaryFileStorage : IFileStorage
         var result = await _cloudinary.DestroyAsync(new DeletionParams(storageKey)
         {
             ResourceType = ResourceType.Raw,
+            Type = "private",
         });
 
         if (result.Error is not null)
