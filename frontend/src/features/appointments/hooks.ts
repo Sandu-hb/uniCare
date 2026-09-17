@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  approveAppointment, assignAppointmentStaff, cancelAppointment, createAppointment,
-  getAssignableStaff, getForStudent, rejectAppointment, searchAppointments,
+  assignAppointmentStaff, cancelAppointment, createAppointment,
+  getAssignableStaff, getForStudent, getMyStaffAppointments, searchAppointments,
   type SearchAppointmentsParams,
 } from './api'
 import type { CreateAppointmentRequest } from './types'
@@ -9,6 +9,7 @@ import type { CreateAppointmentRequest } from './types'
 export const appointmentKeys = {
   all: ['appointments'] as const,
   byStudent: (studentId: string) => [...appointmentKeys.all, 'student', studentId] as const,
+  mine: ['appointments', 'mine'] as const,
   queue: (params: SearchAppointmentsParams) => [...appointmentKeys.all, 'queue', params] as const,
   assignableStaff: ['appointments', 'assignable-staff'] as const,
 }
@@ -18,6 +19,13 @@ export function useMyAppointments(studentId: string) {
     queryKey: appointmentKeys.byStudent(studentId),
     queryFn: () => getForStudent(studentId),
     enabled: Boolean(studentId),
+  })
+}
+
+export function useMyStaffAppointments() {
+  return useQuery({
+    queryKey: appointmentKeys.mine,
+    queryFn: getMyStaffAppointments,
   })
 }
 
@@ -32,7 +40,7 @@ export function useCreateAppointment(studentId: string) {
   })
 }
 
-/** Shared by both the student and staff cancel actions — same endpoint either way. */
+/** Staff-only cancel action. */
 export function useCancelAppointment() {
   const queryClient = useQueryClient()
 
@@ -59,32 +67,13 @@ export function useAssignableStaff() {
   })
 }
 
-/**
- * Approve/reject/assign all mutate one appointment in the staff queue — same
- * invalidation, different call. One helper instead of three near-identical hooks.
- */
-function useQueueMutation<TArgs>(fn: (args: TArgs) => ReturnType<typeof approveAppointment>) {
+export function useAssignAppointmentStaff() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: fn,
+    mutationFn: ({ id, staffId }: { id: string; staffId: string }) => assignAppointmentStaff(id, staffId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: appointmentKeys.all })
     },
   })
-}
-
-export function useApproveAppointment() {
-  return useQueueMutation(({ id, assignedStaffId }: { id: string; assignedStaffId?: string | null }) =>
-    approveAppointment(id, assignedStaffId))
-}
-
-export function useRejectAppointment() {
-  return useQueueMutation(({ id, reason }: { id: string; reason: string }) =>
-    rejectAppointment(id, reason))
-}
-
-export function useAssignAppointmentStaff() {
-  return useQueueMutation(({ id, staffId }: { id: string; staffId: string }) =>
-    assignAppointmentStaff(id, staffId))
 }
