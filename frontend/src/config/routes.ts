@@ -26,8 +26,8 @@ export const ROUTES = {
   staff: {
     dashboard: '/staff',
     students: '/staff/students',
-    studentAccounts: '/staff/student-accounts',
     appointments: '/staff/appointments',
+    myAppointments: '/staff/my-appointments',
     queue: '/staff/queue',
     consultations: '/staff/consultations',
     pharmacy: '/staff/pharmacy',
