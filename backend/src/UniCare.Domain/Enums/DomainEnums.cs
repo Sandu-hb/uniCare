@@ -19,12 +19,14 @@ public enum AppointmentStatus
 
 public enum StaffRole
 {
-    Unassigned, Admin, Nurse, Doctor, Dentist, LabStaff, PharmacyStaff, SystemAdmin
+    Unassigned, Admin, Doctor, LabStaff, PharmacyStaff
 }
 
-public enum VisitStatus { CheckedIn, WithNurse, AwaitingDoctor, WithDoctor, Completed, Abandoned }
+public enum VisitStatus { CheckedIn, AwaitingLab, AwaitingPharmacy, Completed, Abandoned }
 
-public enum QueueStage { Nurse, Doctor, Pharmacy, Laboratory }
+public enum QueueStage { Doctor, Laboratory, Pharmacy }
+
+public enum LabOrderStatus { Requested, Completed }
 
 public enum PrescriptionStatus { Issued, PartiallyDispensed, Dispensed, Cancelled }
 
