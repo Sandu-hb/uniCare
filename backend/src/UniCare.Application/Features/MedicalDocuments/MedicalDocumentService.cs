@@ -86,4 +86,20 @@ public class MedicalDocumentService(IApplicationDbContext db, IFileStorage stora
             .OrderByDescending(d => d.UploadedAt)
             .Select(MedicalDocumentMappings.Projection)
             .ToListAsync(cancellationToken);
+
+    public async Task<(MedicalDocumentDto Document, Stream Content)?> GetContentAsync(
+        Guid documentId, CancellationToken cancellationToken = default)
+    {
+        var document = await db.MedicalDocuments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Id == documentId, cancellationToken);
+
+        if (document is null)
+        {
+            return null;
+        }
+
+        var content = await storage.OpenReadAsync(document.StorageKey, cancellationToken);
+        return (document.ToDto(), content);
+    }
 }
