@@ -8,10 +8,10 @@ using UniCare.Domain.Enums;
 namespace UniCare.Application.Features.Visits;
 
 /// <summary>
-/// Check-in and queue progression. QueueEntry has a unique index on
-/// MedicalVisitId — one row per visit, mutated as it moves through stages —
-/// so the queue number is assigned once at check-in and never recomputed;
-/// only Stage, CalledAt and CompletedAt change as the visit progresses.
+/// Check-in and queue routing. QueueEntry has a unique index on MedicalVisitId —
+/// one row per visit, mutated as it moves through stages — so the queue number is
+/// assigned once at check-in and never recomputed; only Stage, CalledAt and
+/// CompletedAt change as the visit is routed onward.
 /// </summary>
 public class VisitService(IApplicationDbContext db) : IVisitService
 {
@@ -23,13 +23,23 @@ public class VisitService(IApplicationDbContext db) : IVisitService
             .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<IReadOnlyList<VisitDto>> GetQueueAsync(
-        QueueStage stage, CancellationToken cancellationToken = default) =>
-        await db.QueueEntries
+        QueueStage stage, Guid? assignedStaffId = null, CancellationToken cancellationToken = default)
+    {
+        var query = db.QueueEntries
             .AsNoTracking()
-            .Where(q => q.Stage == stage && q.CompletedAt == null)
+            .Where(q => q.Stage == stage && q.CompletedAt == null);
+
+        if (assignedStaffId.HasValue)
+        {
+            query = query.Where(q => q.MedicalVisit.Appointment != null &&
+                q.MedicalVisit.Appointment.AssignedStaffId == assignedStaffId.Value);
+        }
+
+        return await query
             .OrderBy(q => q.QueueNumber)
             .Select(VisitMappings.Projection)
             .ToListAsync(cancellationToken);
+    }
 
     public async Task<VisitDto> CheckInAsync(
         Guid studentId, CheckInRequest request, CancellationToken cancellationToken = default)
@@ -103,7 +113,7 @@ public class VisitService(IApplicationDbContext db) : IVisitService
         {
             MedicalVisit = visit,
             QueueNumber = queueNumber,
-            Stage = QueueStage.Nurse,
+            Stage = QueueStage.Doctor,
             EnteredAt = now,
         };
 
@@ -125,51 +135,47 @@ public class VisitService(IApplicationDbContext db) : IVisitService
         return await GetByIdAsync(id, cancellationToken) ?? throw new NotFoundException(nameof(MedicalVisit), id);
     }
 
-    public async Task<VisitDto> AdvanceAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task RouteNextStageAsync(Guid medicalVisitId, CancellationToken cancellationToken = default)
     {
-        var (visit, queueEntry) = await LoadAsync(id, cancellationToken);
+        var (visit, queueEntry) = await LoadAsync(medicalVisitId, cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        switch (queueEntry.Stage)
+        var hasPendingLabOrder = await db.LabOrders.AnyAsync(
+            o => o.MedicalVisitId == medicalVisitId && o.Status == LabOrderStatus.Requested, cancellationToken);
+        var hasPendingPrescription = await db.Prescriptions.AnyAsync(
+            p => p.Consultation.MedicalVisitId == medicalVisitId &&
+                 p.Status != PrescriptionStatus.Dispensed && p.Status != PrescriptionStatus.Cancelled,
+            cancellationToken);
+
+        QueueStage? nextStage = queueEntry.Stage switch
         {
-            case QueueStage.Nurse:
-                // The clinical record has to exist before the patient moves on —
-                // otherwise the doctor receives a patient with no vitals and the
-                // visit history has a hole in it.
-                if (!await db.VitalSigns.AnyAsync(v => v.MedicalVisitId == id, cancellationToken))
-                {
-                    throw new ConflictException(
-                        "Record vitals before sending this patient to the doctor.");
-                }
+            QueueStage.Doctor => hasPendingLabOrder ? QueueStage.Laboratory
+                : hasPendingPrescription ? QueueStage.Pharmacy
+                : null,
+            QueueStage.Laboratory => hasPendingPrescription ? QueueStage.Pharmacy : null,
+            QueueStage.Pharmacy => null,
+            _ => throw new ConflictException($"Cannot route a visit at the {queueEntry.Stage} stage."),
+        };
 
-                queueEntry.Stage = QueueStage.Doctor;
-                queueEntry.CalledAt = null;
-                queueEntry.EnteredAt = now;
-                visit.Status = VisitStatus.AwaitingDoctor;
-                break;
-
-            case QueueStage.Doctor:
-                if (!await db.Consultations.AnyAsync(c => c.MedicalVisitId == id, cancellationToken))
-                {
-                    throw new ConflictException(
-                        "Record the consultation before completing this visit.");
-                }
-
-                queueEntry.CompletedAt = now;
-                visit.Status = VisitStatus.Completed;
-                visit.CompletedAt = now;
-                break;
-
-            default:
-                throw new ConflictException(
-                    $"Cannot advance a visit at the {queueEntry.Stage} stage yet.");
+        if (nextStage is { } stage)
+        {
+            queueEntry.Stage = stage;
+            queueEntry.CalledAt = null;
+            queueEntry.EnteredAt = now;
+            visit.Status = stage == QueueStage.Laboratory ? VisitStatus.AwaitingLab : VisitStatus.AwaitingPharmacy;
+        }
+        else
+        {
+            queueEntry.CompletedAt = now;
+            visit.Status = VisitStatus.Completed;
+            visit.CompletedAt = now;
         }
 
         await db.SaveChangesAsync(cancellationToken);
-        return await GetByIdAsync(id, cancellationToken) ?? throw new NotFoundException(nameof(MedicalVisit), id);
     }
 
-    public async Task<VisitDto> AbandonAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<VisitDto> AbandonAsync(
+        Guid id, CancellationToken cancellationToken = default)
     {
         var (visit, queueEntry) = await LoadAsync(id, cancellationToken);
 
