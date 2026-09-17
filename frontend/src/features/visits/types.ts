@@ -27,6 +27,8 @@ export interface Visit {
   queueNumber: number
   stage: QueueStage
   calledAt: string | null
+  hasVitalSign: boolean
+  hasConsultation: boolean
 }
 
 /** Mirrors CheckInRequest. */
