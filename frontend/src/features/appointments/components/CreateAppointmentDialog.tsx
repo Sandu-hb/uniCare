@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { useStudents } from '@/features/students/hooks'
+import { useCheckIn } from '@/features/visits/hooks'
 import { useAssignableStaff, useCreateAppointment } from '../hooks'
 
 const MORNING_START = '08:00'
@@ -68,6 +69,7 @@ export function CreateAppointmentDialog() {
   // studentId isn't sent in the request body — it's the route param that
   // scopes which student's appointment list useCreateAppointment invalidates.
   const createAppointment = useCreateAppointment(watch('studentId') || '')
+  const checkIn = useCheckIn()
 
   // Booked for right now — there is no date/time picker. Evaluated on every
   // render (cheap) so the "closed right now" message stays accurate while
@@ -85,10 +87,21 @@ export function CreateAppointmentDialog() {
         reason: values.reason,
       },
       {
-        onSuccess: () => {
-          toast.success('Appointment booked')
+        // Booked for "right now" always means the student is already here —
+        // so booking also checks them straight into the doctor's queue,
+        // rather than leaving that as a separate click on the queue page.
+        onSuccess: (appointment) => {
           reset()
           setOpen(false)
+          checkIn.mutate(
+            { studentId: appointment.studentId, request: { appointmentId: appointment.id } },
+            {
+              onSuccess: () => toast.success('Appointment booked and checked in'),
+              onError: (error) => toast.error(
+                `Appointment booked, but check-in failed: ${getApiErrorMessage(error)}`,
+              ),
+            },
+          )
         },
         onError: (error) => toast.error(getApiErrorMessage(error)),
       },
@@ -165,8 +178,8 @@ export function CreateAppointmentDialog() {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createAppointment.isPending || !canBookNow}>
-              {createAppointment.isPending ? 'Booking…' : 'Book'}
+            <Button type="submit" disabled={createAppointment.isPending || checkIn.isPending || !canBookNow}>
+              {createAppointment.isPending || checkIn.isPending ? 'Booking…' : 'Book & check in'}
             </Button>
           </DialogFooter>
         </form>
