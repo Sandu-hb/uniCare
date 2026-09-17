@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ROLES, STAFF_ROLES } from '@/config/roles'
 import { ROUTES } from '@/config/routes'
+import { MyStaffAppointmentsPage } from '@/features/appointments/MyStaffAppointmentsPage'
 import { StaffAppointmentsPage } from '@/features/appointments/StaffAppointmentsPage'
 import { StudentAppointmentsPage } from '@/features/appointments/StudentAppointmentsPage'
 import { ChooseRolePage } from '@/features/auth/ChooseRolePage'
@@ -13,7 +14,6 @@ import { RegisterStudentPage } from '@/features/auth/RegisterStudentPage'
 import { StaffDashboardPage } from '@/features/dashboard/StaffDashboardPage'
 import { StudentDashboardPage } from '@/features/dashboard/StudentDashboardPage'
 import { MedicalProfilePage } from '@/features/medical-profiles/MedicalProfilePage'
-import { StudentAccountsPage } from '@/features/students/StudentAccountsPage'
 import { StudentsPage } from '@/features/students/StudentsPage'
 import { SystemStatusPage } from '@/features/system/SystemStatusPage'
 import { QueuePage } from '@/features/visits/QueuePage'
@@ -53,11 +53,14 @@ export function AppRouter() {
           {/* StudentsPage/MedicalProfilePage link to these exact paths directly, not via ROUTES.staff.students */}
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
-          <Route path={ROUTES.staff.appointments} element={<StaffAppointmentsPage />} />
           <Route path={ROUTES.staff.queue} element={<QueuePage />} />
 
           <Route element={<ProtectedRoute allowedRoles={[ROLES.Admin]} />}>
-            <Route path={ROUTES.staff.studentAccounts} element={<StudentAccountsPage />} />
+            <Route path={ROUTES.staff.appointments} element={<StaffAppointmentsPage />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.Doctor, ROLES.Nurse]} />}>
+            <Route path={ROUTES.staff.myAppointments} element={<MyStaffAppointmentsPage />} />
           </Route>
         </Route>
       </Route>

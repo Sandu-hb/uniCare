@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using UniCare.Application.Contracts;
 using UniCare.Application.Features.Appointments;
 using UniCare.Application.Features.Appointments.Dtos;
+using UniCare.Application.Features.Staff;
 using UniCare.Application.Features.Students;
 using UniCare.Domain.Constants;
 using UniCare.Domain.Enums;
@@ -13,31 +14,29 @@ namespace UniCare.Api.Controllers;
 
 /// <summary>
 /// Booking and scheduling lives here, split between student-scoped routes
-/// (a student only ever sees their own appointments) and staff-wide routes
-/// (an admin manages the whole queue, addressed by appointment id).
+/// (a student only ever sees their own appointments), staff-wide routes
+/// (an admin manages the whole queue, addressed by appointment id), and the
+/// staff-self route (a doctor or nurse sees only what's assigned to them).
 /// </summary>
 [ApiController]
 [Authorize]
 public class AppointmentsController(
     IAppointmentService appointmentService,
     IStudentService studentService,
-    IValidator<CreateAppointmentRequest> createValidator,
-    IValidator<RejectAppointmentRequest> rejectValidator) : ControllerBase
+    IStaffService staffService,
+    IValidator<CreateAppointmentRequest> createValidator) : ControllerBase
 {
     private Guid CurrentApplicationUserId =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     private bool IsStaff() => AppRoles.Staff.Any(User.IsInRole);
 
+    /// <summary>Admin-only: books an appointment already assigned to a doctor or nurse.</summary>
     [HttpPost("api/students/{studentId:guid}/appointments")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<ActionResult<AppointmentDto>> Create(
         Guid studentId, CreateAppointmentRequest request, CancellationToken cancellationToken)
     {
-        if (!await studentService.IsOwnedByApplicationUserAsync(studentId, CurrentApplicationUserId, cancellationToken))
-        {
-            return Forbid();
-        }
-
         var validation = await createValidator.ValidateAsync(request, cancellationToken);
         if (!validation.IsValid)
         {
@@ -101,52 +100,40 @@ public class AppointmentsController(
         return Ok(appointment);
     }
 
-    [HttpPost("api/appointments/{id:guid}/approve")]
-    [Authorize(Roles = AppRoles.Admin)]
-    public async Task<ActionResult<AppointmentDto>> Approve(
-        Guid id, ApproveAppointmentRequest request, CancellationToken cancellationToken) =>
-        Ok(await appointmentService.ApproveAsync(id, request, cancellationToken));
-
-    [HttpPost("api/appointments/{id:guid}/reject")]
-    [Authorize(Roles = AppRoles.Admin)]
-    public async Task<ActionResult<AppointmentDto>> Reject(
-        Guid id, RejectAppointmentRequest request, CancellationToken cancellationToken)
-    {
-        var validation = await rejectValidator.ValidateAsync(request, cancellationToken);
-        if (!validation.IsValid)
-        {
-            foreach (var error in validation.Errors)
-            {
-                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-            }
-            return ValidationProblem(ModelState);
-        }
-
-        return Ok(await appointmentService.RejectAsync(id, request.Reason, cancellationToken));
-    }
-
     [HttpPost("api/appointments/{id:guid}/assign")]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<ActionResult<AppointmentDto>> AssignStaff(
         Guid id, AssignAppointmentStaffRequest request, CancellationToken cancellationToken) =>
         Ok(await appointmentService.AssignStaffAsync(id, request.StaffId, cancellationToken));
 
-    /// <summary>Either the owning student or any staff member may cancel.</summary>
+    /// <summary>Staff-only: a student can no longer cancel their own appointment.</summary>
     [HttpPost("api/appointments/{id:guid}/cancel")]
     public async Task<ActionResult<AppointmentDto>> Cancel(Guid id, CancellationToken cancellationToken)
     {
+        if (!IsStaff())
+        {
+            return Forbid();
+        }
+
         var appointment = await appointmentService.GetByIdAsync(id, cancellationToken);
         if (appointment is null)
         {
             return NotFound();
         }
 
-        if (!IsStaff() &&
-            !await studentService.IsOwnedByApplicationUserAsync(appointment.StudentId, CurrentApplicationUserId, cancellationToken))
+        return Ok(await appointmentService.CancelAsync(id, cancellationToken));
+    }
+
+    /// <summary>The signed-in doctor or nurse's own appointments.</summary>
+    [HttpGet("api/appointments/mine")]
+    public async Task<ActionResult<IReadOnlyList<AppointmentDto>>> GetMine(CancellationToken cancellationToken)
+    {
+        var staff = await staffService.GetByApplicationUserIdAsync(CurrentApplicationUserId, cancellationToken);
+        if (staff is null)
         {
             return Forbid();
         }
 
-        return Ok(await appointmentService.CancelAsync(id, cancellationToken));
+        return Ok(await appointmentService.GetForStaffAsync(staff.Id, cancellationToken));
     }
 }

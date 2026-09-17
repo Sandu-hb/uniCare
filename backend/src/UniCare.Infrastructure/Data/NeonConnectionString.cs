@@ -20,17 +20,19 @@ public static class NeonConnectionString
 
         var uri = new Uri(value);
         var userInfo = uri.UserInfo.Split(':', 2);
+        var isLocal = uri.Host is "localhost" or "127.0.0.1" or "::1";
 
         var builder = new NpgsqlConnectionStringBuilder
         {
             Host = uri.Host,
             Port = uri.IsDefaultPort ? 5432 : uri.Port,
             Database = uri.AbsolutePath.Trim('/'),
-            Username = Uri.UnescapeDataString(userInfo[0]),
-            Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : null,
-            // Neon requires TLS. Npgsql's Require mode encrypts without demanding a chain the
-            // client can verify locally, which is what Neon's proxy expects.
-            SslMode = SslMode.Require
+            Username = userInfo.Length > 0 && !string.IsNullOrEmpty(userInfo[0]) ? Uri.UnescapeDataString(userInfo[0]) : null,
+            Password = userInfo.Length > 1 && !string.IsNullOrEmpty(userInfo[1]) ? Uri.UnescapeDataString(userInfo[1]) : null,
+            // Neon requires TLS. Local Postgres typically uses Prefer/Disable.
+            SslMode = isLocal ? SslMode.Prefer : SslMode.Require,
+            Timeout = isLocal ? 15 : 60,
+            CommandTimeout = isLocal ? 15 : 60
         };
 
         return builder.ConnectionString;

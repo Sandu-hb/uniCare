@@ -35,8 +35,8 @@ export async function createStudent(request: CreateStudentRequest): Promise<Stud
 /**
  * Self-service registration. Logs the new account straight in — the account
  * itself starts PendingApproval, but that doesn't gate signing in; what
- * actually unlocks (booking an appointment) is gated on the medical profile
- * being Verified, checked independently at that point.
+ * actually requires a Verified medical profile is being booked for an
+ * appointment by an admin, checked independently at that point.
  */
 export async function registerStudent(request: RegisterStudentRequest): Promise<LoginResponse> {
   const { data } = await apiClient.post<LoginResponse>('/students/register', request)
@@ -50,7 +50,7 @@ export interface SearchStudentAccountsParams {
   pageSize?: number
 }
 
-/** Admin-only: the approval queue. */
+/** Any staff role may call this: student records with account status. */
 export async function searchStudentAccounts(
   params: SearchStudentAccountsParams,
 ): Promise<PagedResult<StudentAccount>> {

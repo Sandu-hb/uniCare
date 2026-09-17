@@ -8,6 +8,9 @@ public interface IStaffService
 {
     Task<StaffDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<StaffDto?> GetByApplicationUserIdAsync(
+        Guid applicationUserId, CancellationToken cancellationToken = default);
+
     Task<PagedResult<StaffDto>> SearchAsync(
         AccountStatus? status, StaffRole? role, int page, int pageSize,
         CancellationToken cancellationToken = default);

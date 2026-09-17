@@ -12,8 +12,8 @@ export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   Cancelled: 'Cancelled',
 }
 
-/** Statuses a student or staff member can still cancel from. */
-export const OPEN_STATUSES: AppointmentStatus[] = ['Requested', 'Approved']
+/** Statuses staff can still cancel from. */
+export const OPEN_STATUSES: AppointmentStatus[] = ['Approved']
 
 /** Mirrors AppointmentDto. */
 export interface Appointment {
@@ -31,14 +31,10 @@ export interface Appointment {
 
 /** Mirrors CreateAppointmentRequest. */
 export interface CreateAppointmentRequest {
+  assignedStaffId: string
   scheduledDate: string
   scheduledTime: string
   reason?: string | null
-}
-
-/** Mirrors ApproveAppointmentRequest. */
-export interface ApproveAppointmentRequest {
-  assignedStaffId?: string | null
 }
 
 /** Mirrors AssignAppointmentStaffRequest. */

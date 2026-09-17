@@ -69,10 +69,7 @@ export function useRegisterStudent() {
   })
 }
 
-/**
- * Admin-only on the server — pass enabled: false for a non-admin viewer so this
- * never fires a request that can only come back 403.
- */
+/** Any staff role may call this; pass enabled: false to skip an unneeded fetch. */
 export function useStudentAccounts(params: SearchStudentAccountsParams, enabled = true) {
   return useQuery({
     queryKey: studentKeys.accounts(params),

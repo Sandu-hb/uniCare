@@ -9,14 +9,13 @@ using UniCare.Domain.Enums;
 namespace UniCare.Application.Features.Appointments;
 
 /// <summary>
-/// Owns the appointment workflow: Requested → Approved or Rejected, and Cancelled
-/// from either open state. CheckedIn/Completed belong to the check-in feature,
-/// not here — nothing in this service sets them.
+/// Owns the appointment workflow: an admin creates an appointment already Approved
+/// and staff-assigned, and it can be Cancelled from that open state. CheckedIn/Completed
+/// belong to the check-in feature, not here — nothing in this service sets them.
 /// </summary>
 public class AppointmentService(IApplicationDbContext db) : IAppointmentService
 {
-    private static readonly AppointmentStatus[] OpenStates =
-        [AppointmentStatus.Requested, AppointmentStatus.Approved];
+    private static readonly AppointmentStatus[] OpenStates = [AppointmentStatus.Approved];
 
     public async Task<AppointmentDto?> GetByIdAsync(
         Guid id, CancellationToken cancellationToken = default) =>
@@ -31,6 +30,16 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
         await db.Appointments
             .AsNoTracking()
             .Where(a => a.StudentId == studentId)
+            .OrderByDescending(a => a.ScheduledDate)
+            .ThenByDescending(a => a.ScheduledTime)
+            .Select(AppointmentMappings.Projection)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<AppointmentDto>> GetForStaffAsync(
+        Guid staffId, CancellationToken cancellationToken = default) =>
+        await db.Appointments
+            .AsNoTracking()
+            .Where(a => a.AssignedStaffId == staffId)
             .OrderByDescending(a => a.ScheduledDate)
             .ThenByDescending(a => a.ScheduledTime)
             .Select(AppointmentMappings.Projection)
@@ -90,12 +99,16 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
                 "Your medical profile must be verified before you can book an appointment.");
         }
 
+        await EnsureAssignableStaffAsync(request.AssignedStaffId, cancellationToken);
+
         var appointment = new Appointment
         {
             StudentId = studentId,
+            AssignedStaffId = request.AssignedStaffId,
             ScheduledDate = request.ScheduledDate,
             ScheduledTime = request.ScheduledTime,
             Reason = request.Reason?.Trim(),
+            Status = AppointmentStatus.Approved,
         };
 
         db.Appointments.Add(appointment);
@@ -103,38 +116,6 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
 
         return await GetByIdAsync(appointment.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Appointment), appointment.Id);
-    }
-
-    public async Task<AppointmentDto> ApproveAsync(
-        Guid id, ApproveAppointmentRequest request, CancellationToken cancellationToken = default)
-    {
-        var appointment = await LoadAsync(id, cancellationToken);
-        EnsureRequested(appointment);
-
-        if (request.AssignedStaffId.HasValue)
-        {
-            await EnsureAssignableStaffAsync(request.AssignedStaffId.Value, cancellationToken);
-            appointment.AssignedStaffId = request.AssignedStaffId;
-        }
-
-        appointment.Status = AppointmentStatus.Approved;
-        appointment.RejectionReason = null;
-
-        await db.SaveChangesAsync(cancellationToken);
-        return await GetByIdAsync(id, cancellationToken) ?? throw new NotFoundException(nameof(Appointment), id);
-    }
-
-    public async Task<AppointmentDto> RejectAsync(
-        Guid id, string reason, CancellationToken cancellationToken = default)
-    {
-        var appointment = await LoadAsync(id, cancellationToken);
-        EnsureRequested(appointment);
-
-        appointment.Status = AppointmentStatus.Rejected;
-        appointment.RejectionReason = reason.Trim();
-
-        await db.SaveChangesAsync(cancellationToken);
-        return await GetByIdAsync(id, cancellationToken) ?? throw new NotFoundException(nameof(Appointment), id);
     }
 
     public async Task<AppointmentDto> AssignStaffAsync(
@@ -145,7 +126,7 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
         if (!OpenStates.Contains(appointment.Status))
         {
             throw new ConflictException(
-                $"Only a requested or approved appointment can have staff assigned; this one is {appointment.Status}.");
+                $"Only an approved appointment can have staff reassigned; this one is {appointment.Status}.");
         }
 
         await EnsureAssignableStaffAsync(staffId, cancellationToken);
@@ -163,7 +144,7 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
         if (!OpenStates.Contains(appointment.Status))
         {
             throw new ConflictException(
-                $"Only a requested or approved appointment can be cancelled; this one is {appointment.Status}.");
+                $"Only an approved appointment can be cancelled; this one is {appointment.Status}.");
         }
 
         appointment.Status = AppointmentStatus.Cancelled;
@@ -176,15 +157,6 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
         await db.Appointments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken)
             ?? throw new NotFoundException(nameof(Appointment), id);
 
-    private static void EnsureRequested(Appointment appointment)
-    {
-        if (appointment.Status != AppointmentStatus.Requested)
-        {
-            throw new ConflictException(
-                $"Only a requested appointment can be approved or rejected; this one is {appointment.Status}.");
-        }
-    }
-
     private async Task EnsureAssignableStaffAsync(Guid staffId, CancellationToken cancellationToken)
     {
         var staff = await db.Staff.FirstOrDefaultAsync(s => s.Id == staffId, cancellationToken)
@@ -193,6 +165,11 @@ public class AppointmentService(IApplicationDbContext db) : IAppointmentService
         if (!staff.IsActive)
         {
             throw new ConflictException("Cannot assign an inactive staff member to an appointment.");
+        }
+
+        if (staff.Role is not (StaffRole.Doctor or StaffRole.Nurse))
+        {
+            throw new ConflictException("Appointments can only be assigned to a doctor or nurse.");
         }
     }
 }

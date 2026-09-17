@@ -4,8 +4,7 @@ import {
 } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getApiErrorMessage } from '@/lib/api-client'
-import { useMyStudent } from '@/features/students/hooks'
-import { useMyAppointments } from './hooks'
+import { useMyStaffAppointments } from './hooks'
 import { APPOINTMENT_STATUS_LABELS, type AppointmentStatus } from './types'
 
 function statusVariant(status: AppointmentStatus) {
@@ -14,21 +13,14 @@ function statusVariant(status: AppointmentStatus) {
   return 'secondary' as const
 }
 
-export function StudentAppointmentsPage() {
-  const { data: student, isPending: studentPending } = useMyStudent()
-  const studentId = student?.id ?? ''
-
-  const { data: appointments, isPending, error } = useMyAppointments(studentId)
+export function MyStaffAppointmentsPage() {
+  const { data: appointments, isPending, error } = useMyStaffAppointments()
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My appointments</h1>
-          <p className="text-sm text-muted-foreground">
-            Appointments booked for you by the medical centre.
-          </p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">My appointments</h1>
+        <p className="text-sm text-muted-foreground">Appointments the medical centre has assigned to you.</p>
       </div>
 
       {error && (
@@ -39,7 +31,7 @@ export function StudentAppointmentsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Upcoming and past requests</CardTitle>
+          <CardTitle className="text-base">Upcoming and past appointments</CardTitle>
           <CardDescription>
             {appointments ? `${appointments.length} total` : 'Loading…'}
           </CardDescription>
@@ -51,22 +43,23 @@ export function StudentAppointmentsPage() {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Time</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Reason</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Assigned to</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(studentPending || isPending) && (
+                {isPending && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
                       Loading…
                     </TableCell>
                   </TableRow>
                 )}
                 {appointments?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No appointments yet.
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      No appointments assigned to you yet.
                     </TableCell>
                   </TableRow>
                 )}
@@ -74,12 +67,13 @@ export function StudentAppointmentsPage() {
                   <TableRow key={appt.id}>
                     <TableCell>{appt.scheduledDate}</TableCell>
                     <TableCell>{appt.scheduledTime.slice(0, 5)}</TableCell>
+                    <TableCell className="font-medium">{appt.studentName}</TableCell>
+                    <TableCell className="max-w-40 truncate">{appt.reason ?? '—'}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant(appt.status)}>
                         {APPOINTMENT_STATUS_LABELS[appt.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell>{appt.assignedStaffName ?? '—'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
