@@ -26,5 +26,22 @@ public static class ConsultationMappings
                     IsPrimary = d.IsPrimary,
                 })
                 .ToList(),
+            PrescriptionItems = consultation.Prescription == null
+                ? new List<PrescriptionItemDto>()
+                : consultation.Prescription.Items
+                    .Select(i => new PrescriptionItemDto
+                    {
+                        MedicineId = i.MedicineId,
+                        MedicineName = i.Medicine.Name,
+                        Dosage = i.Dosage,
+                        Frequency = i.Frequency,
+                        DurationDays = i.DurationDays,
+                        Quantity = i.Quantity,
+                        Instructions = i.Instructions,
+                    })
+                    .ToList(),
+            LabRequestDetails = consultation.MedicalVisit.LabOrder != null
+                ? consultation.MedicalVisit.LabOrder.RequestDetails
+                : null,
         };
 }

@@ -8,6 +8,17 @@ public record DiagnosisDto
     public required bool IsPrimary { get; init; }
 }
 
+public record PrescriptionItemDto
+{
+    public required Guid MedicineId { get; init; }
+    public required string MedicineName { get; init; }
+    public required string Dosage { get; init; }
+    public required string Frequency { get; init; }
+    public required int DurationDays { get; init; }
+    public required int Quantity { get; init; }
+    public string? Instructions { get; init; }
+}
+
 public record ConsultationDto
 {
     public required Guid Id { get; init; }
@@ -22,4 +33,6 @@ public record ConsultationDto
 
     public required DateTimeOffset ConsultedAt { get; init; }
     public required IReadOnlyList<DiagnosisDto> Diagnoses { get; init; }
+    public required IReadOnlyList<PrescriptionItemDto> PrescriptionItems { get; init; }
+    public string? LabRequestDetails { get; init; }
 }
