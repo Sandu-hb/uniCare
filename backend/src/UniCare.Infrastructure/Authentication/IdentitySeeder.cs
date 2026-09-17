@@ -130,24 +130,33 @@ public static class IdentitySeeder
         // available weekdays within business hours — enough to check in,
         // record a consultation against, and see a completed visit already
         // sitting in the student's history.
-        if (!await db.Appointments.AnyAsync(a => a.AssignedStaffId == doctorStaff.Id))
+        var slots = new (int DaysAhead, TimeOnly Time, string Reason)[]
         {
-            var slots = new (int DaysAhead, TimeOnly Time, string Reason)[]
-            {
-                (0, new TimeOnly(9, 0), "Recurring headaches"),
-                (1, new TimeOnly(10, 30), "Annual physical checkup"),
-                (1, new TimeOnly(14, 0), "Follow-up on allergy medication"),
-                (2, new TimeOnly(15, 30), "Sports injury — knee pain"),
-            };
+            (0, new TimeOnly(9, 0), "Recurring headaches"),
+            (1, new TimeOnly(10, 30), "Annual physical checkup"),
+            (1, new TimeOnly(14, 0), "Follow-up on allergy medication"),
+            (2, new TimeOnly(15, 30), "Sports injury — knee pain"),
+        };
 
-            for (var i = 0; i < slots.Length && i < seededStudentIds.Count; i++)
+        for (var i = 0; i < slots.Length && i < seededStudentIds.Count; i++)
+        {
+            var (daysAhead, time, reason) = slots[i];
+            var studentId = seededStudentIds[i];
+            var date = NextWeekday(DateOnly.FromDateTime(DateTime.UtcNow), daysAhead);
+
+            // Per-slot, not per-doctor: re-running the seeder must not skip
+            // everything just because some other appointment already exists
+            // for this doctor from unrelated manual testing.
+            var alreadyExists = await db.Appointments.AnyAsync(
+                a => a.StudentId == studentId && a.ScheduledDate == date && a.ScheduledTime == time);
+
+            if (!alreadyExists)
             {
-                var (daysAhead, time, reason) = slots[i];
                 db.Appointments.Add(new Appointment
                 {
-                    StudentId = seededStudentIds[i],
+                    StudentId = studentId,
                     AssignedStaffId = doctorStaff.Id,
-                    ScheduledDate = NextWeekday(DateOnly.FromDateTime(DateTime.UtcNow), daysAhead),
+                    ScheduledDate = date,
                     ScheduledTime = time,
                     Status = AppointmentStatus.Approved,
                     Reason = reason,
