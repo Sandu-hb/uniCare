@@ -1,9 +1,14 @@
+import { CalendarX2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { getApiErrorMessage } from '@/lib/api-client'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { useMyStudent } from '@/features/students/hooks'
 import { useMyAppointments } from './hooks'
 import { APPOINTMENT_STATUS_LABELS, type AppointmentStatus } from './types'
@@ -19,23 +24,16 @@ export function StudentAppointmentsPage() {
   const studentId = student?.id ?? ''
 
   const { data: appointments, isPending, error } = useMyAppointments(studentId)
+  const loading = studentPending || isPending
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">My appointments</h1>
-          <p className="text-sm text-muted-foreground">
-            Appointments booked for you by the medical centre.
-          </p>
-        </div>
-      </div>
+    <PageContainer size="md">
+      <PageHeader
+        title="My appointments"
+        description="Appointments booked for you by the medical centre."
+      />
 
-      {error && (
-        <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(error)}
-        </p>
-      )}
+      {error && <ErrorBanner error={error} />}
 
       <Card>
         <CardHeader>
@@ -56,17 +54,17 @@ export function StudentAppointmentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(studentPending || isPending) && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      Loading…
-                    </TableCell>
+                {loading && [0, 1].map((i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 4 }).map((_, j) => (
+                      <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                    ))}
                   </TableRow>
-                )}
+                ))}
                 {appointments?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No appointments yet.
+                    <TableCell colSpan={4}>
+                      <EmptyState icon={CalendarX2} message="No appointments yet." />
                     </TableCell>
                   </TableRow>
                 )}
@@ -87,6 +85,6 @@ export function StudentAppointmentsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   )
 }
