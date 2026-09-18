@@ -69,8 +69,8 @@ export function RegisterStudentPage() {
       {/* Ambient background glow, matching the role-selection page */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[500px] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent blur-3xl" />
-        <div className="absolute top-1/4 -left-32 size-[400px] rounded-full bg-cyan-500/5 blur-3xl" />
-        <div className="absolute bottom-10 -right-32 size-[450px] rounded-full bg-teal-500/5 blur-3xl" />
+        <div className="absolute top-1/4 -left-32 size-[400px] rounded-full bg-(--chart-2)/10 blur-3xl" />
+        <div className="absolute bottom-10 -right-32 size-[450px] rounded-full bg-(--chart-4)/10 blur-3xl" />
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-[1080px]">
