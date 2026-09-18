@@ -1,10 +1,14 @@
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
-import { getApiErrorMessage } from '@/lib/api-client'
+import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { cn } from '@/lib/utils'
 import { useFlaggedSessionDetail, useFlaggedSessions } from './hooks'
 
@@ -14,27 +18,26 @@ export function WellnessAlertsPage() {
   const { data: detail, isPending: detailPending } = useFlaggedSessionDetail(selectedId)
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Wellness Alerts</h1>
-        <p className="text-sm text-muted-foreground">
-          Counselling chats the assistant flagged as showing possible crisis indicators. Ordinary
-          conversations stay private — only flagged sessions are ever visible here.
-        </p>
-      </div>
+    <PageContainer size="xl">
+      <PageHeader
+        title="Wellness Alerts"
+        description="Counselling chats the assistant flagged as showing possible crisis indicators. Ordinary
+          conversations stay private — only flagged sessions are ever visible here."
+      />
 
-      {error && (
-        <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(error)}
-        </p>
+      {error && <ErrorBanner error={error} />}
+
+      {isPending && (
+        <div className="grid gap-2">
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+        </div>
       )}
 
-      {isPending && <p className="text-sm text-muted-foreground">Loading…</p>}
-
-      {sessions?.length === 0 && (
+      {!isPending && sessions?.length === 0 && (
         <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            No flagged sessions.
+          <CardContent>
+            <EmptyState icon={ShieldCheck} message="No flagged sessions." />
           </CardContent>
         </Card>
       )}
@@ -93,6 +96,6 @@ export function WellnessAlertsPage() {
           </Card>
         )}
       </div>
-    </div>
+    </PageContainer>
   )
 }
