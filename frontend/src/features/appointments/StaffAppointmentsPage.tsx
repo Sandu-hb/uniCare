@@ -1,3 +1,4 @@
+import { CalendarX2 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -5,7 +6,12 @@ import { Button } from '@/components/ui/button'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { CreateAppointmentDialog } from './components/CreateAppointmentDialog'
 import { useAssignableStaff, useAssignAppointmentStaff, useCancelAppointment, useAppointmentQueue } from './hooks'
@@ -36,7 +42,7 @@ function AssignPicker({ appointment }: { appointment: Appointment }) {
   return (
     <div className="flex items-center gap-1.5">
       <select
-        className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
+        className="h-8 rounded-lg border border-input bg-muted/30 px-2 text-xs outline-none focus-visible:border-ring focus-visible:bg-background focus-visible:ring-3 focus-visible:ring-ring/50"
         value={selected}
         onChange={(e) => setSelected(e.target.value)}
       >
@@ -69,32 +75,28 @@ export function StaffAppointmentsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Appointments</h1>
-          <p className="text-sm text-muted-foreground">Book appointments and manage the schedule.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as AppointmentStatus | '')}
-          >
-            <option value="">All statuses</option>
-            {Object.entries(APPOINTMENT_STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-          <CreateAppointmentDialog />
-        </div>
-      </div>
+    <PageContainer size="xl">
+      <PageHeader
+        title="Appointments"
+        description="Book appointments and manage the schedule."
+        actions={
+          <>
+            <select
+              className="h-8 rounded-lg border border-input bg-muted/30 px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:bg-background focus-visible:ring-3 focus-visible:ring-ring/50"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as AppointmentStatus | '')}
+            >
+              <option value="">All statuses</option>
+              {Object.entries(APPOINTMENT_STATUS_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <CreateAppointmentDialog />
+          </>
+        }
+      />
 
-      {error && (
-        <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(error)}
-        </p>
-      )}
+      {error && <ErrorBanner error={error} />}
 
       <Card>
         <CardHeader>
@@ -118,17 +120,17 @@ export function StaffAppointmentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isPending && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      Loading…
-                    </TableCell>
+                {isPending && [0, 1, 2].map((i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 7 }).map((_, j) => (
+                      <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                    ))}
                   </TableRow>
-                )}
+                ))}
                 {data?.items.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      Nothing here.
+                    <TableCell colSpan={7}>
+                      <EmptyState icon={CalendarX2} message="Nothing here." />
                     </TableCell>
                   </TableRow>
                 )}
@@ -165,6 +167,6 @@ export function StaffAppointmentsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   )
 }
