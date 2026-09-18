@@ -40,6 +40,7 @@ public static class DependencyInjection
         var connectionString = NeonConnectionString.FromUri(rawConnectionString);
 
         services.AddScoped<IFileStorage, CloudinaryFileStorage>();
+        services.AddHttpClient<IWellnessAssistant, GeminiWellnessAssistant>();
 
         // Scoped lifetime: one DbContext per HTTP request. It is not thread-safe and
         // it tracks changes, so a singleton would leak entities between users.
