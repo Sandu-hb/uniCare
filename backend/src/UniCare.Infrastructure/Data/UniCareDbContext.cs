@@ -43,6 +43,10 @@ public class UniCareDbContext(DbContextOptions<UniCareDbContext> options)
     public DbSet<Medicine> Medicines => Set<Medicine>();
     public DbSet<MedicineBatch> MedicineBatches => Set<MedicineBatch>();
 
+    // Wellness
+    public DbSet<CounselingSession> CounselingSessions => Set<CounselingSession>();
+    public DbSet<CounselingMessage> CounselingMessages => Set<CounselingMessage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
