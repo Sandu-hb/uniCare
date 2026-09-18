@@ -1,9 +1,14 @@
+import { FileText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { useMyStudent } from '@/features/students/hooks'
-import { getApiErrorMessage } from '@/lib/api-client'
 import { useVisitHistory } from './hooks'
 
 export function ReportsPage() {
@@ -12,30 +17,28 @@ export function ReportsPage() {
   const { data: visits, isPending, error } = useVisitHistory(studentId)
 
   const recorded = visits?.filter((v) => v.doctorName !== null)
+  const loading = studentPending || isPending
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Reports</h1>
-        <p className="text-sm text-muted-foreground">
-          Your consultation and lab records from past visits to the medical centre.
-        </p>
-      </div>
+    <PageContainer size="md">
+      <PageHeader
+        title="Reports"
+        description="Your consultation and lab records from past visits to the medical centre."
+      />
 
-      {error && (
-        <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(error)}
-        </p>
+      {error && <ErrorBanner error={error} />}
+
+      {loading && (
+        <div className="grid gap-4">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
       )}
 
-      {(studentPending || isPending) && (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      )}
-
-      {recorded?.length === 0 && (
+      {!loading && recorded?.length === 0 && (
         <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            No completed consultations yet.
+          <CardContent>
+            <EmptyState icon={FileText} message="No completed consultations yet." />
           </CardContent>
         </Card>
       )}
@@ -96,6 +99,6 @@ export function ReportsPage() {
           </Card>
         ))}
       </div>
-    </div>
+    </PageContainer>
   )
 }

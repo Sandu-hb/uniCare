@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { useHealth } from './hooks'
 
@@ -57,10 +58,12 @@ export function SystemStatusPage() {
           </div>
 
           {error && (
-            <p className="mb-4 rounded-md bg-destructive/10 p-3 text-xs text-destructive">
-              {getApiErrorMessage(error)} — is the backend running? Try{' '}
-              <code className="font-mono">dotnet run --project src/UniCare.Api</code>.
-            </p>
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription className="text-xs">
+                {getApiErrorMessage(error)} — is the backend running? Try{' '}
+                <code className="font-mono">dotnet run --project src/UniCare.Api</code>.
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="flex items-center justify-between gap-3">

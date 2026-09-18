@@ -1,10 +1,13 @@
-import { CalendarDays, ClipboardCheck, ListOrdered, ShieldCheck } from 'lucide-react'
+import { CalendarDays, ClipboardCheck, Inbox, ListOrdered, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
+import { EmptyState } from '@/components/common/EmptyState'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { useAppointmentQueue } from '@/features/appointments/hooks'
 import { useAuth } from '@/features/auth/auth-context'
 import { ROLES, type Role } from '@/config/roles'
@@ -62,26 +65,23 @@ export function StaffDashboardPage() {
     .sort((a, b) => a.queueNumber - b.queueNumber)
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">{todayGreeting()}, {user?.fullName.split(' ')[0]}</h1>
-          <p className="text-sm text-muted-foreground">
-            {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
-            {' '}· Medical Centre overview
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {isAdmin && (
-            <Button asChild size="sm" variant="outline">
-              <Link to="/students">Review approvals</Link>
+    <PageContainer size="xl">
+      <PageHeader
+        title={`${todayGreeting()}, ${user?.fullName.split(' ')[0]}`}
+        description={`${new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })} · Medical Centre overview`}
+        actions={
+          <>
+            {isAdmin && (
+              <Button asChild size="sm" variant="outline">
+                <Link to="/students">Review approvals</Link>
+              </Button>
+            )}
+            <Button asChild size="sm">
+              <Link to={queueRoute}>Open queue</Link>
             </Button>
-          )}
-          <Button asChild size="sm">
-            <Link to={queueRoute}>Open queue</Link>
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className={`mb-5 grid gap-4 ${isAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
         {isAdmin && (
@@ -116,7 +116,7 @@ export function StaffDashboardPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-1">
             {queueEntries.length === 0 && (
-              <p className="py-4 text-center text-sm text-muted-foreground">Nobody in the queue right now.</p>
+              <EmptyState icon={ListOrdered} message="Nobody in the queue right now." />
             )}
             {queueEntries.slice(0, 5).map((v) => (
               <div key={v.id} className="flex items-center justify-between border-b border-border py-2.5 last:border-0">
@@ -143,7 +143,7 @@ export function StaffDashboardPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-1">
               {pending?.items.length === 0 && (
-                <p className="py-4 text-center text-sm text-muted-foreground">Nothing waiting on approval.</p>
+                <EmptyState icon={Inbox} message="Nothing waiting on approval." />
               )}
               {pending?.items.map((s) => (
                 <div key={s.id} className="flex items-center justify-between border-b border-border py-2.5 last:border-0">
@@ -171,6 +171,6 @@ export function StaffDashboardPage() {
           </Card>
         )}
       </div>
-    </div>
+    </PageContainer>
   )
 }

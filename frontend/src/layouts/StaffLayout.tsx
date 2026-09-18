@@ -1,7 +1,8 @@
 import {
-  Activity, Calendar, FlaskConical, Home, ListOrdered, LogOut, Pill,
-  Users, type LucideIcon,
+  Activity, Calendar, FlaskConical, HeartPulse, Home, ListOrdered, LogOut, Menu, Pill,
+  Users, X, type LucideIcon,
 } from 'lucide-react'
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
 import { ROLES, type Role } from '@/config/roles'
@@ -40,6 +41,7 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     title: 'Administration',
     items: [
       { to: '/system-status', label: 'System status', icon: Activity },
+      { to: '/staff/wellness-alerts', label: 'Wellness alerts', icon: HeartPulse, roles: [ROLES.Admin] },
     ],
   },
 ]
@@ -53,20 +55,61 @@ export function StaffLayout() {
   const { user, hasRole, logout } = useAuth()
   const isAdmin = hasRole(ROLES.Admin)
   const { data: pending } = useStudentAccounts({ status: 'PendingApproval', pageSize: 1 }, isAdmin)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const primaryRole = user?.roles.find((r) => r !== ROLES.Student) ?? user?.roles[0] ?? ''
 
   return (
     <div className="flex min-h-svh bg-background">
-      <aside className="flex w-64 shrink-0 flex-col border-r border-border bg-muted/40 p-4">
-        <div className="flex items-center gap-2.5 px-1.5 pb-5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary">
-            <Activity className="size-[19px] text-primary-foreground" />
+      <div className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card px-4 shadow-sm md:hidden">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+          className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Menu className="size-5" />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex size-7 items-center justify-center rounded-[8px] bg-primary">
+            <Activity className="size-4 text-primary-foreground" />
           </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-[15px] font-semibold">UniCare</span>
-            <span className="text-[10.5px] text-muted-foreground">Medical Centre</span>
+          <span className="text-[14px] font-semibold">UniCare</span>
+        </div>
+        <div className="size-9" />
+      </div>
+
+      {sidebarOpen && (
+        <div
+          aria-hidden
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/30 md:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col border-r border-border bg-muted/40 p-4 shadow-xl transition-transform duration-200 md:static md:z-auto md:translate-x-0 md:shadow-none ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2.5 px-1.5 pb-5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary">
+              <Activity className="size-[19px] text-primary-foreground" />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-[15px] font-semibold">UniCare</span>
+              <span className="text-[10.5px] text-muted-foreground">Medical Centre</span>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground md:hidden"
+          >
+            <X className="size-4" />
+          </button>
         </div>
 
         <div className="mb-5 flex items-center gap-2.5 rounded-[14px] border border-border bg-card p-2.5">
@@ -110,6 +153,7 @@ export function StaffLayout() {
                       key={item.to}
                       to={item.to}
                       end={item.to === '/staff'}
+                      onClick={() => setSidebarOpen(false)}
                       className={({ isActive }) =>
                         `flex items-center justify-between gap-2.5 rounded-[10px] px-2.5 py-2 text-[13.5px] font-medium transition-colors ${
                           isActive
@@ -147,7 +191,7 @@ export function StaffLayout() {
           </button>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main className="min-w-0 flex-1 overflow-y-auto pt-14 md:pt-0">
         <Outlet />
       </main>
     </div>

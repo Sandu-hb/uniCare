@@ -21,7 +21,7 @@ function NavPill({ to, label, disabled }: { to?: string; label: string; disabled
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex h-9 items-center rounded-full px-3.5 text-[13.5px] transition-colors ${
+        `flex h-9 shrink-0 items-center rounded-full px-3.5 text-[13.5px] whitespace-nowrap transition-colors ${
           isActive ? 'bg-muted font-semibold text-foreground' : 'font-medium text-muted-foreground hover:text-foreground'
         }`
       }
@@ -37,27 +37,28 @@ export function StudentLayout() {
 
   return (
     <div className="flex min-h-svh flex-col bg-background">
-      <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-border bg-card px-10">
-        <div className="flex items-center gap-9">
-          <div className="flex items-center gap-2.5">
+      <header className="flex h-[68px] shrink-0 items-center justify-between gap-4 border-b border-border bg-card px-4 shadow-sm sm:px-6 lg:px-10">
+        <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-9">
+          <div className="flex shrink-0 items-center gap-2.5">
             <div className="flex size-8 items-center justify-center rounded-[9px] bg-primary">
               <Activity className="size-[17px] text-primary-foreground" />
             </div>
-            <span className="text-[15px] font-semibold">UniCare</span>
+            <span className="hidden text-[15px] font-semibold sm:inline">UniCare</span>
           </div>
 
-          <nav className="flex items-center gap-1">
+          <nav className="flex min-w-0 items-center gap-1 overflow-x-auto">
             <NavPill to="/student" label="Dashboard" />
             <NavPill to="/student/medical-profile" label="Medical Profile" />
             <NavPill to="/student/documents" label="Documents" />
             <NavPill to="/student/appointments" label="Appointments" />
             <NavPill to="/student/prescriptions" label="Prescriptions" />
             <NavPill to="/student/reports" label="Reports" />
+            <NavPill to="/student/wellness" label="Wellness" />
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-4">
+          <div className="hidden items-center gap-2.5 sm:flex">
             <div className="flex size-8 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
               {initials(user?.fullName ?? '')}
             </div>
@@ -70,7 +71,7 @@ export function StudentLayout() {
             type="button"
             onClick={() => void logout()}
             aria-label="Sign out"
-            className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <LogOut className="size-4" />
           </button>

@@ -9,7 +9,7 @@ export function ForbiddenPage() {
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-background p-6">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center">
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center shadow-md">
         <div className="mx-auto flex size-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
           <ShieldAlert className="size-5" />
         </div>

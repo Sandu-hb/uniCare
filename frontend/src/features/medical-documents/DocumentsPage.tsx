@@ -1,10 +1,16 @@
+import { FileX2 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { useMyStudent } from '@/features/students/hooks'
 import { getApiErrorMessage } from '@/lib/api-client'
 import { getDocumentContent } from './api'
@@ -40,27 +46,19 @@ export function DocumentsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <PageContainer size="md">
       {isOwnView && (
         <Link to="/student/medical-profile" className="mb-3 inline-block text-xs text-muted-foreground hover:underline">
           ← Medical profile
         </Link>
       )}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Medical documents</h1>
-          <p className="text-sm text-muted-foreground">
-            Hospital-verified documents for AI-assisted record extraction.
-          </p>
-        </div>
-        {isOwnView && studentId && <UploadDocumentDialog studentId={studentId} />}
-      </div>
+      <PageHeader
+        title="Medical documents"
+        description="Hospital-verified documents for AI-assisted record extraction."
+        actions={isOwnView && studentId && <UploadDocumentDialog studentId={studentId} />}
+      />
 
-      {error && (
-        <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(error)}
-        </p>
-      )}
+      {error && <ErrorBanner error={error} />}
 
       <Card>
         <CardHeader>
@@ -81,17 +79,17 @@ export function DocumentsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isPending && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      Loading…
-                    </TableCell>
+                {isPending && [0, 1].map((i) => (
+                  <TableRow key={i}>
+                    {Array.from({ length: 4 }).map((_, j) => (
+                      <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                    ))}
                   </TableRow>
-                )}
+                ))}
                 {documents?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No documents uploaded yet.
+                    <TableCell colSpan={4}>
+                      <EmptyState icon={FileX2} message="No documents uploaded yet." />
                     </TableCell>
                   </TableRow>
                 )}
@@ -116,6 +114,6 @@ export function DocumentsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   )
 }

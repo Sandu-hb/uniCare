@@ -20,6 +20,7 @@ export const ROUTES = {
     appointments: '/student/appointments',
     prescriptions: '/student/prescriptions',
     reports: '/student/reports',
+    wellness: '/student/wellness',
   },
 
   staff: {
@@ -29,6 +30,7 @@ export const ROUTES = {
     queue: '/staff/queue',
     labQueue: '/staff/lab-queue',
     pharmacyQueue: '/staff/pharmacy-queue',
+    wellnessAlerts: '/staff/wellness-alerts',
   },
 } as const
 

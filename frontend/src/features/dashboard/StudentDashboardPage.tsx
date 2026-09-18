@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import {
   Card, CardContent, CardHeader, CardTitle,
 } from '@/components/ui/card'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { useMyAppointments } from '@/features/appointments/hooks'
 import { OPEN_STATUSES } from '@/features/appointments/types'
 import { useAuth } from '@/features/auth/auth-context'
@@ -43,13 +45,11 @@ export function StudentDashboardPage() {
   const awaitingReview = profile?.status === 'SubmittedForVerification'
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">{todayGreeting()}, {user?.fullName.split(' ')[0]}</h1>
-        <p className="text-sm text-muted-foreground">
-          {student ? `${student.department} · Year ${student.academicYear}` : 'Welcome to UniCare'}
-        </p>
-      </div>
+    <PageContainer size="xl">
+      <PageHeader
+        title={`${todayGreeting()}, ${user?.fullName.split(' ')[0]}`}
+        description={student ? `${student.department} · Year ${student.academicYear}` : 'Welcome to UniCare'}
+      />
 
       {needsAction && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
@@ -140,7 +140,7 @@ export function StudentDashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link to="/student/appointments" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted/50">
+        <Link to="/student/appointments" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:bg-muted/50 hover:shadow-md">
           <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
             <CalendarDays className="size-[18px] text-primary" />
           </div>
@@ -150,7 +150,7 @@ export function StudentDashboardPage() {
           </div>
         </Link>
 
-        <Link to="/student/documents" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted/50">
+        <Link to="/student/documents" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:bg-muted/50 hover:shadow-md">
           <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
             <FileText className="size-[18px] text-primary" />
           </div>
@@ -160,7 +160,7 @@ export function StudentDashboardPage() {
           </div>
         </Link>
 
-        <Link to="/student/prescriptions" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted/50">
+        <Link to="/student/prescriptions" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:bg-muted/50 hover:shadow-md">
           <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
             <Pill className="size-[18px] text-primary" />
           </div>
@@ -170,7 +170,7 @@ export function StudentDashboardPage() {
           </div>
         </Link>
 
-        <Link to="/student/reports" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted/50">
+        <Link to="/student/reports" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:bg-muted/50 hover:shadow-md">
           <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
             <ClipboardList className="size-[18px] text-primary" />
           </div>
@@ -180,6 +180,6 @@ export function StudentDashboardPage() {
           </div>
         </Link>
       </div>
-    </div>
+    </PageContainer>
   )
 }

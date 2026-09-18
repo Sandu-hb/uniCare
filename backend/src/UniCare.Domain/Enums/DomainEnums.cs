@@ -42,3 +42,7 @@ public enum DocumentStatus { Uploaded }
 /// currently works here.
 /// </summary>
 public enum AccountStatus { Active, PendingApproval, Suspended }
+
+public enum CounselingSessionStatus { Active, Ended }
+
+public enum CounselingMessageRole { Student, Assistant }

@@ -18,6 +18,8 @@ import { PharmacyQueuePage } from '@/features/pharmacy/PharmacyQueuePage'
 import { StudentsPage } from '@/features/students/StudentsPage'
 import { SystemStatusPage } from '@/features/system/SystemStatusPage'
 import { DoctorQueuePage } from '@/features/visits/DoctorQueuePage'
+import { WellnessAlertsPage } from '@/features/wellness/WellnessAlertsPage'
+import { WellnessPage } from '@/features/wellness/WellnessPage'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { StaffLayout } from '@/layouts/StaffLayout'
 import { StudentLayout } from '@/layouts/StudentLayout'
@@ -69,6 +71,10 @@ export function AppRouter() {
           <Route element={<ProtectedRoute allowedRoles={[ROLES.PharmacyStaff, ROLES.Admin]} />}>
             <Route path={ROUTES.staff.pharmacyQueue} element={<PharmacyQueuePage />} />
           </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={[ROLES.Admin]} />}>
+            <Route path={ROUTES.staff.wellnessAlerts} element={<WellnessAlertsPage />} />
+          </Route>
         </Route>
       </Route>
 
@@ -84,6 +90,7 @@ export function AppRouter() {
           <Route path={ROUTES.student.documents} element={<DocumentsPage />} />
           <Route path={ROUTES.student.prescriptions} element={<PrescriptionsPage />} />
           <Route path={ROUTES.student.reports} element={<ReportsPage />} />
+          <Route path={ROUTES.student.wellness} element={<WellnessPage />} />
         </Route>
       </Route>
 
