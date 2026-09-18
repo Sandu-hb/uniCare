@@ -1,10 +1,15 @@
+import { Pill } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { useMyStudent } from '@/features/students/hooks'
-import { getApiErrorMessage } from '@/lib/api-client'
 import { useVisitHistory } from './hooks'
 
 function statusVariant(status: string) {
@@ -19,28 +24,25 @@ export function PrescriptionsPage() {
   const { data: visits, isPending, error } = useVisitHistory(studentId)
 
   const prescribed = visits?.filter((v) => v.prescriptionItems.length > 0)
+  const loading = studentPending || isPending
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Prescriptions</h1>
-        <p className="text-sm text-muted-foreground">Medicine prescribed to you, by visit.</p>
-      </div>
+    <PageContainer size="md">
+      <PageHeader title="Prescriptions" description="Medicine prescribed to you, by visit." />
 
-      {error && (
-        <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(error)}
-        </p>
+      {error && <ErrorBanner error={error} />}
+
+      {loading && (
+        <div className="grid gap-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
       )}
 
-      {(studentPending || isPending) && (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      )}
-
-      {prescribed?.length === 0 && (
+      {!loading && prescribed?.length === 0 && (
         <Card>
-          <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            No prescriptions yet.
+          <CardContent>
+            <EmptyState icon={Pill} message="No prescriptions yet." />
           </CardContent>
         </Card>
       )}
@@ -90,6 +92,6 @@ export function PrescriptionsPage() {
           </Card>
         ))}
       </div>
-    </div>
+    </PageContainer>
   )
 }
