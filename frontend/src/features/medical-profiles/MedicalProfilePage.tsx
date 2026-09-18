@@ -9,7 +9,10 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
 import { useAuth } from '@/features/auth/auth-context'
 import { MedicalReportsUploadCard } from '@/features/medical-documents/components/MedicalReportsUploadCard'
 import { UniversityIdUploadCard } from '@/features/medical-documents/components/UniversityIdUploadCard'
@@ -115,11 +118,19 @@ export function MedicalProfilePage() {
     }
 
     if (isPending) {
-        return <p className="p-6 text-sm text-muted-foreground">Loading medical profile…</p>
+        return (
+            <PageContainer size="md">
+                <div className="grid gap-4">
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-40 w-full" />
+                    <Skeleton className="h-40 w-full" />
+                </div>
+            </PageContainer>
+        )
     }
 
     return (
-        <div className="mx-auto max-w-3xl p-6">
+        <PageContainer size="md">
             <div className="flex items-center justify-between">
                 {isOwnView
                     ? <span />
@@ -151,11 +162,7 @@ export function MedicalProfilePage() {
                 <Badge variant={statusVariant(status)}>{STATUS_LABELS[status]}</Badge>
             </div>
 
-            {error && (
-                <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                    {getApiErrorMessage(error)}
-                </p>
-            )}
+            {error && <ErrorBanner error={error} />}
 
             {status === 'Rejected' && profile?.rejectionReason && (
                 <div className="mb-4 rounded-md border border-destructive bg-destructive/10 p-4">
@@ -183,7 +190,7 @@ export function MedicalProfilePage() {
                                 <Label htmlFor="bloodGroup">Blood group</Label>
                                 <select
                                     id="bloodGroup"
-                                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm disabled:cursor-not-allowed"
+                                    className="h-8 rounded-lg border border-input bg-muted/30 px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:bg-background focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed"
                                     {...register('bloodGroup')}
                                 >
                                     {BLOOD_GROUPS.map((g: BloodGroup) => (
@@ -320,6 +327,6 @@ export function MedicalProfilePage() {
                     )}
                 </div>
             </form>
-        </div>
+        </PageContainer>
     )
 }
