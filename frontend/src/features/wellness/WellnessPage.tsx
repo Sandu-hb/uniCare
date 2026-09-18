@@ -2,8 +2,10 @@ import { Send } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
-import { getApiErrorMessage } from '@/lib/api-client'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageHeader } from '@/components/common/PageHeader'
 import { cn } from '@/lib/utils'
 import { useOwnSessionDetail, useSendCounselingMessage, useStartOrResumeSession } from './hooks'
 
@@ -35,24 +37,26 @@ export function WellnessPage() {
   const loading = startSession.isPending || (Boolean(sessionId) && sessionPending)
 
   return (
-    <div className="mx-auto flex h-[calc(100svh-68px)] max-w-3xl flex-col p-6">
-      <div className="mb-4">
-        <h1 className="text-2xl font-semibold">Wellness Chat</h1>
-        <p className="text-sm text-muted-foreground">
-          A private, judgement-free space to talk things through. This is first-line support,
-          not a replacement for a clinician — the assistant will point you to real help when it matters.
-        </p>
-      </div>
+    <div className="mx-auto flex h-[calc(100svh-68px)] max-w-3xl flex-col p-4 sm:p-6">
+      <PageHeader
+        className="mb-4"
+        title="Wellness Chat"
+        description="A private, judgement-free space to talk things through. This is first-line support,
+          not a replacement for a clinician — the assistant will point you to real help when it matters."
+      />
 
       {(startSession.isError || sendMessage.isError) && (
-        <p className="mb-3 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(startSession.error ?? sendMessage.error)}
-        </p>
+        <ErrorBanner error={startSession.error ?? sendMessage.error} className="mb-3" />
       )}
 
       <Card className="flex flex-1 flex-col overflow-hidden">
         <CardContent className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
-          {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {loading && (
+            <div className="grid gap-3">
+              <Skeleton className="h-10 w-2/3 justify-self-start rounded-2xl" />
+              <Skeleton className="h-10 w-1/2 justify-self-end rounded-2xl" />
+            </div>
+          )}
 
           {!loading && session?.messages.length === 0 && (
             <p className="text-sm text-muted-foreground">
