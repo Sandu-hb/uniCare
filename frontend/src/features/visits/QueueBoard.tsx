@@ -1,3 +1,4 @@
+import { ListOrdered } from 'lucide-react'
 import { type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -5,7 +6,12 @@ import { Button } from '@/components/ui/button'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { ROLES } from '@/config/roles'
 import { useAuth } from '@/features/auth/auth-context'
 import { getApiErrorMessage } from '@/lib/api-client'
@@ -46,17 +52,10 @@ export function QueueBoard({ title, description, stage, renderAction }: {
   }
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
+    <PageContainer size="lg">
+      <PageHeader title={title} description={description} />
 
-      {error && (
-        <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(error)}
-        </p>
-      )}
+      {error && <ErrorBanner error={error} />}
 
       <Card>
         <CardHeader>
@@ -75,14 +74,19 @@ export function QueueBoard({ title, description, stage, renderAction }: {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isPending && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">Loading…</TableCell>
+                {isPending && [0, 1, 2].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="ml-auto h-8 w-24" /></TableCell>
                   </TableRow>
-                )}
+                ))}
                 {queue?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">Nobody in this queue right now.</TableCell>
+                    <TableCell colSpan={4}>
+                      <EmptyState icon={ListOrdered} message="Nobody in this queue right now." />
+                    </TableCell>
                   </TableRow>
                 )}
                 {queue?.map((visit) => (
@@ -119,6 +123,6 @@ export function QueueBoard({ title, description, stage, renderAction }: {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   )
 }
