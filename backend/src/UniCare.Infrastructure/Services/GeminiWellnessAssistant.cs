@@ -27,6 +27,16 @@ public class GeminiWellnessAssistant : IWellnessAssistant
         "at [CRISIS LINE PHONE NUMBER] — they're available to talk with you directly. " +
         "If you're in immediate danger, please contact emergency services right away.";
 
+    // Gemini's free tier returns 429/503 under load fairly often. Neither is
+    // this app's fault nor the student's — a couple of quick retries clears
+    // most of them, and the message below (not crisis-flagged) is what the
+    // student sees if it's still down after that, instead of a raw error.
+    private const string TemporarilyUnavailableMessage =
+        "I'm having trouble responding right now — this usually clears up in a minute. " +
+        "Please try sending that again shortly.";
+
+    private static readonly TimeSpan[] RetryDelays = [TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3)];
+
     private const string SystemInstruction = """
         You are a first-line wellness support assistant for university students —
         not a therapist, not a doctor, and not a substitute for professional
@@ -84,28 +94,51 @@ public class GeminiWellnessAssistant : IWellnessAssistant
                 ResponseMimeType: "application/json",
                 ResponseSchema: ReplySchema));
 
-        var response = await _http.PostAsJsonAsync(
-            $"v1beta/models/{_model}:generateContent", request, JsonOptions, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        var body = await response.Content.ReadFromJsonAsync<GeminiResponse>(JsonOptions, cancellationToken)
-            ?? throw new InvalidOperationException("Gemini returned an empty response body.");
-
-        // The prompt itself was blocked by Gemini's own safety filters before
-        // the model ever replied — on a wellness topic, that's itself a signal
-        // to escalate rather than a "no comment", not a case to retry or ignore.
-        if (body.PromptFeedback?.BlockReason is not null)
+        for (var attempt = 0; ; attempt++)
         {
-            return new WellnessAssistantReply { Reply = CrisisResourceMessage, CrisisFlagged = true };
+            var response = await _http.PostAsJsonAsync(
+                $"v1beta/models/{_model}:generateContent", request, JsonOptions, cancellationToken);
+
+            var isTransient = response.StatusCode is System.Net.HttpStatusCode.TooManyRequests
+                or System.Net.HttpStatusCode.ServiceUnavailable;
+
+            if (isTransient && attempt < RetryDelays.Length)
+            {
+                await Task.Delay(RetryDelays[attempt], cancellationToken);
+                continue;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                if (isTransient)
+                {
+                    return new WellnessAssistantReply { Reply = TemporarilyUnavailableMessage, CrisisFlagged = false };
+                }
+
+                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new InvalidOperationException(
+                    $"Gemini request failed with {(int)response.StatusCode} {response.StatusCode}: {errorBody}");
+            }
+
+            var body = await response.Content.ReadFromJsonAsync<GeminiResponse>(JsonOptions, cancellationToken)
+                ?? throw new InvalidOperationException("Gemini returned an empty response body.");
+
+            // The prompt itself was blocked by Gemini's own safety filters before
+            // the model ever replied — on a wellness topic, that's itself a signal
+            // to escalate rather than a "no comment", not a case to retry or ignore.
+            if (body.PromptFeedback?.BlockReason is not null)
+            {
+                return new WellnessAssistantReply { Reply = CrisisResourceMessage, CrisisFlagged = true };
+            }
+
+            var text = body.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text
+                ?? throw new InvalidOperationException("Gemini response had no candidate text.");
+
+            var parsed = JsonSerializer.Deserialize<GeminiStructuredReply>(text, JsonOptions)
+                ?? throw new InvalidOperationException("Gemini's structured reply could not be parsed.");
+
+            return new WellnessAssistantReply { Reply = parsed.Reply, CrisisFlagged = parsed.CrisisFlagged };
         }
-
-        var text = body.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text
-            ?? throw new InvalidOperationException("Gemini response had no candidate text.");
-
-        var parsed = JsonSerializer.Deserialize<GeminiStructuredReply>(text, JsonOptions)
-            ?? throw new InvalidOperationException("Gemini's structured reply could not be parsed.");
-
-        return new WellnessAssistantReply { Reply = parsed.Reply, CrisisFlagged = parsed.CrisisFlagged };
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
