@@ -1,5 +1,5 @@
 import {
-  Activity, Calendar, FlaskConical, Home, ListOrdered, LogOut, Pill,
+  Activity, Calendar, FlaskConical, HeartPulse, Home, ListOrdered, LogOut, Pill,
   Users, type LucideIcon,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
@@ -40,6 +40,7 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     title: 'Administration',
     items: [
       { to: '/system-status', label: 'System status', icon: Activity },
+      { to: '/staff/wellness-alerts', label: 'Wellness alerts', icon: HeartPulse, roles: [ROLES.Admin] },
     ],
   },
 ]
