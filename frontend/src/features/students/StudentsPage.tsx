@@ -1,10 +1,16 @@
+import { Users } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { EmptyState } from '@/components/common/EmptyState'
+import { ErrorBanner } from '@/components/common/ErrorBanner'
+import { PageContainer } from '@/components/common/PageContainer'
+import { PageHeader } from '@/components/common/PageHeader'
 import { ROLES } from '@/config/roles'
 import { useAuth } from '@/features/auth/auth-context'
 import type { AccountStatus } from '@/features/auth/types'
@@ -62,16 +68,12 @@ export function StudentsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Students</h1>
-          <p className="text-sm text-muted-foreground">
-            {data ? `${data.totalCount} registered` : 'Loading…'}
-          </p>
-        </div>
-        {isAdmin && <CreateStudentDialog />}
-      </div>
+    <PageContainer size="xl">
+      <PageHeader
+        title="Students"
+        description={data ? `${data.totalCount} registered` : 'Loading…'}
+        actions={isAdmin && <CreateStudentDialog />}
+      />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Input
@@ -81,7 +83,7 @@ export function StudentsPage() {
           className="max-w-sm"
         />
         <select
-          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+          className="h-8 rounded-lg border border-input bg-muted/30 px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:bg-background focus-visible:ring-3 focus-visible:ring-ring/50"
           value={status}
           onChange={(e) => onStatusChange(e.target.value as AccountStatus | '')}
         >
@@ -95,11 +97,7 @@ export function StudentsPage() {
         )}
       </div>
 
-      {error && (
-        <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {getApiErrorMessage(error)}
-        </p>
-      )}
+      {error && <ErrorBanner error={error} />}
 
       <div className="overflow-x-auto rounded-md border border-border">
         <Table>
@@ -116,18 +114,21 @@ export function StudentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isPending && (
-              <TableRow>
-                <TableCell colSpan={isAdmin ? 8 : 7} className="text-center text-muted-foreground">
-                  Loading students…
-                </TableCell>
+            {isPending && [0, 1, 2, 3].map((i) => (
+              <TableRow key={i}>
+                {Array.from({ length: isAdmin ? 8 : 7 }).map((_, j) => (
+                  <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                ))}
               </TableRow>
-            )}
+            ))}
 
             {data?.items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 8 : 7} className="text-center text-muted-foreground">
-                  {search ? `No students match “${search}”.` : 'No students registered yet.'}
+                <TableCell colSpan={isAdmin ? 8 : 7}>
+                  <EmptyState
+                    icon={Users}
+                    message={search ? `No students match "${search}".` : 'No students registered yet.'}
+                  />
                 </TableCell>
               </TableRow>
             )}
@@ -190,6 +191,6 @@ export function StudentsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
