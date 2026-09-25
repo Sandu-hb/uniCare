@@ -19,8 +19,9 @@ import { UniversityIdUploadCard } from '@/features/medical-documents/components/
 import { useDocuments } from '@/features/medical-documents/hooks'
 import { useMyStudent } from '@/features/students/hooks'
 import { getApiErrorMessage } from '@/lib/api-client'
+import { RequestChangesDialog } from './components/RequestChangesDialog'
 import {
-    useMedicalProfile, useRejectMedicalProfile,
+    useMedicalProfile,
     useSubmitMedicalProfile, useUpsertMedicalProfile, useVerifyMedicalProfile,
 } from './hooks'
 import {
@@ -50,7 +51,6 @@ export function MedicalProfilePage() {
     const upsert = useUpsertMedicalProfile(studentId)
     const submit = useSubmitMedicalProfile(studentId)
     const verify = useVerifyMedicalProfile(studentId)
-    const reject = useRejectMedicalProfile(studentId)
 
     const { register, handleSubmit, reset } = useForm<UpsertMedicalProfileRequest>({
         defaultValues: { bloodGroup: 'Unknown' },
@@ -69,7 +69,7 @@ export function MedicalProfilePage() {
     const status = profile?.status ?? 'Draft'
     const isEditable = isOwnView && (!profile || EDITABLE_STATUSES.includes(status))
     const awaitingReview = status === 'SubmittedForVerification'
-    const busy = upsert.isPending || submit.isPending || verify.isPending || reject.isPending
+    const busy = upsert.isPending || submit.isPending || verify.isPending
 
     // Mirrors MedicalProfileService.SubmitAsync's two document checks — shown up
     // front so the student sees what's missing instead of a failed submit.
@@ -103,18 +103,6 @@ export function MedicalProfilePage() {
             onSuccess: () => toast.success('Profile verified'),
             onError: (e) => toast.error(getApiErrorMessage(e)),
         })
-    }
-
-    function onReject() {
-        const reason = window.prompt('What needs to change?')
-        if (!reason?.trim()) return
-        reject.mutate(
-            { reason },
-            {
-                onSuccess: () => toast.success('Changes requested'),
-                onError: (e) => toast.error(getApiErrorMessage(e)),
-            },
-        )
     }
 
     if (isPending) {
@@ -308,9 +296,7 @@ export function MedicalProfilePage() {
                     {awaitingReview && canReview && (
                         <>
                             <Button type="button" disabled={busy} onClick={onVerify}>Verify</Button>
-                            <Button type="button" variant="outline" disabled={busy} onClick={onReject}>
-                                Request changes
-                            </Button>
+                            <RequestChangesDialog studentId={studentId} disabled={busy} />
                         </>
                     )}
 

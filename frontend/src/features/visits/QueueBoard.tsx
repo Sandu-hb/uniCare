@@ -15,7 +15,8 @@ import { PageHeader } from '@/components/common/PageHeader'
 import { ROLES } from '@/config/roles'
 import { useAuth } from '@/features/auth/auth-context'
 import { getApiErrorMessage } from '@/lib/api-client'
-import { useAbandonVisit, useCallVisit, useQueue } from './hooks'
+import { AbandonVisitDialog } from './components/AbandonVisitDialog'
+import { useCallVisit, useQueue } from './hooks'
 import { VISIT_STATUS_LABELS, type QueueStage, type Visit, type VisitStatus } from './types'
 
 function statusVariant(status: VisitStatus) {
@@ -40,15 +41,9 @@ export function QueueBoard({ title, description, stage, renderAction }: {
   const { hasRole } = useAuth()
   const { data: queue, isPending, error } = useQueue(stage)
   const call = useCallVisit()
-  const abandon = useAbandonVisit()
 
   function onCall(id: string) {
     call.mutate(id, { onError: (e) => toast.error(getApiErrorMessage(e)) })
-  }
-
-  function onAbandon(id: string) {
-    if (!window.confirm('Mark this visit as left without being seen?')) return
-    abandon.mutate(id, { onError: (e) => toast.error(getApiErrorMessage(e)) })
   }
 
   return (
@@ -109,10 +104,7 @@ export function QueueBoard({ title, description, stage, renderAction }: {
                           Call
                         </Button>
                         {hasRole(ROLES.Admin) && (
-                          <Button size="sm" variant="destructive" disabled={abandon.isPending}
-                            onClick={() => onAbandon(visit.id)}>
-                            Abandon
-                          </Button>
+                          <AbandonVisitDialog visitId={visit.id} studentName={visit.studentName} />
                         )}
                       </div>
                     </TableCell>
