@@ -89,7 +89,36 @@ public class AuthService(
             ?? throw new NotFoundException(nameof(ApplicationUser), userId);
 
         var roles = await userManager.GetRolesAsync(user);
-        return TokenIssuer.ToCurrentUserDto(user, roles);
+        var specialization = await tokenIssuer.GetSpecializationAsync(user.Id, cancellationToken);
+        return TokenIssuer.ToCurrentUserDto(user, roles, specialization);
+    }
+
+    public async Task<CurrentUserDto> ChangePasswordAsync(
+        Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await userManager.FindByIdAsync(userId.ToString())
+            ?? throw new NotFoundException(nameof(ApplicationUser), userId);
+
+        var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            // IdentityResult can't distinguish "wrong current password" from "new
+            // password fails policy" without inspecting error codes — the wrong-
+            // password case is far more common and deserves the more specific
+            // (and correctly-statused) exception.
+            if (result.Errors.Any(e => e.Code == "PasswordMismatch"))
+            {
+                throw new InvalidCredentialsException();
+            }
+            throw new ConflictException(string.Join(" ", result.Errors.Select(e => e.Description)));
+        }
+
+        user.MustChangePassword = false;
+        await userManager.UpdateAsync(user);
+
+        var roles = await userManager.GetRolesAsync(user);
+        var specialization = await tokenIssuer.GetSpecializationAsync(user.Id, cancellationToken);
+        return TokenIssuer.ToCurrentUserDto(user, roles, specialization);
     }
 
     // ---------------------------------------------------------------------------

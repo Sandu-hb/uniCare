@@ -1,5 +1,8 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using UniCare.Application.Abstractions;
 using UniCare.Application.Contracts;
 using UniCare.Application.Exceptions;
 using UniCare.Application.Features.Auth;
@@ -20,7 +23,9 @@ namespace UniCare.Infrastructure.Authentication;
 public class StaffService(
     UserManager<ApplicationUser> userManager,
     UniCareDbContext db,
-    IAuthService authService) : IStaffService
+    IAuthService authService,
+    IEmailService emailService,
+    ILogger<StaffService> logger) : IStaffService
 {
     private static readonly AccountStatus[] ActivatableStates =
         [AccountStatus.PendingApproval, AccountStatus.Suspended];
@@ -128,6 +133,45 @@ public class StaffService(
         return await GetByIdAsync(id, cancellationToken) ?? throw new NotFoundException(nameof(Staff), id);
     }
 
+    public async Task<StaffDto> ResendCredentialsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var staff = await LoadAsync(id, cancellationToken);
+        var user = await FindUserAsync(staff, cancellationToken);
+
+        var temporaryPassword = GenerateTemporaryPassword();
+
+        // RemovePasswordAsync + AddPasswordAsync rather than ResetPasswordAsync: an
+        // admin-triggered reset needs no reset token — the admin's own auth is the
+        // authorization already, the same trust level CreateAsync sets a password with.
+        var removeResult = await userManager.RemovePasswordAsync(user);
+        if (!removeResult.Succeeded)
+        {
+            throw new ConflictException(string.Join(" ", removeResult.Errors.Select(e => e.Description)));
+        }
+
+        var addResult = await userManager.AddPasswordAsync(user, temporaryPassword);
+        if (!addResult.Succeeded)
+        {
+            throw new ConflictException(string.Join(" ", addResult.Errors.Select(e => e.Description)));
+        }
+
+        // A reset credential is temporary too — force a change before anything
+        // else, same as a brand-new admin-created account.
+        user.MustChangePassword = true;
+        await userManager.UpdateAsync(user);
+
+        // The old credentials must stop working immediately — otherwise whoever has
+        // them (possibly nobody, possibly the wrong person if the original email
+        // leaked partway) keeps standing access after this "reset".
+        await authService.RevokeAsync(user.Id, cancellationToken);
+
+        var emailSent = await TrySendPasswordEmailAsync(
+            staff.Email, staff.FullName, temporaryPassword, isNewAccount: false, cancellationToken);
+
+        var current = await GetByIdAsync(id, cancellationToken) ?? throw new NotFoundException(nameof(Staff), id);
+        return current with { WelcomeEmailSent = emailSent };
+    }
+
     private IQueryable<StaffDto> BaseQuery() =>
         from staff in db.Staff.AsNoTracking()
         join user in db.Users.AsNoTracking() on staff.ApplicationUserId equals (Guid?)user.Id
@@ -146,11 +190,15 @@ public class StaffService(
         };
 
     private async Task<StaffDto> CreateAccountAsync(
-        string email, string password, string fullName, StaffRole role,
+        string email, string? password, string fullName, StaffRole role,
         string? specialization, string? licenseNumber, string? contactNumber,
         AccountStatus accountStatus, bool isActive, CancellationToken cancellationToken)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
+
+        // Only the admin-direct path (CreateAsync) ever omits a password; self-service
+        // registration always supplies one, enforced by RegisterStaffRequestValidator.
+        var generatedPassword = string.IsNullOrEmpty(password) ? GenerateTemporaryPassword() : null;
 
         var user = new ApplicationUser
         {
@@ -159,9 +207,12 @@ public class StaffService(
             EmailConfirmed = true,
             FullName = fullName.Trim(),
             Status = accountStatus,
+            // A system-generated password is temporary by nature; a self-chosen
+            // one (self-registration) needs no forced change.
+            MustChangePassword = generatedPassword is not null,
         };
 
-        var result = await userManager.CreateAsync(user, password);
+        var result = await userManager.CreateAsync(user, generatedPassword ?? password!);
         if (!result.Succeeded)
         {
             throw new ConflictException(string.Join(" ", result.Errors.Select(e => e.Description)));
@@ -185,8 +236,83 @@ public class StaffService(
         db.Staff.Add(staff);
         await db.SaveChangesAsync(cancellationToken);
 
-        return await GetByIdAsync(staff.Id, cancellationToken)
+        var created = await GetByIdAsync(staff.Id, cancellationToken)
             ?? throw new NotFoundException(nameof(Staff), staff.Id);
+
+        if (generatedPassword is null)
+        {
+            return created;
+        }
+
+        // The account already exists at this point regardless of whether the email
+        // succeeds — a flaky mail provider must not undo a valid account creation.
+        // The admin sees WelcomeEmailSent=false and can re-trigger delivery some
+        // other way; the account itself is not left half-created.
+        var emailSent = await TrySendPasswordEmailAsync(
+            normalizedEmail, fullName.Trim(), generatedPassword, isNewAccount: true, cancellationToken);
+
+        return created with { WelcomeEmailSent = emailSent };
+    }
+
+    private async Task<bool> TrySendPasswordEmailAsync(
+        string toEmail, string fullName, string temporaryPassword, bool isNewAccount,
+        CancellationToken cancellationToken)
+    {
+        var subject = "Your UniCare staff account";
+        var intro = isNewAccount
+            ? "An account has been created for you on UniCare Medical Centre's staff portal."
+            : "Your password for UniCare Medical Centre's staff portal has been reset.";
+        var body = $"""
+            <p>Hello {fullName},</p>
+            <p>{intro}</p>
+            <p><strong>Email:</strong> {toEmail}<br/>
+            <strong>Temporary password:</strong> {temporaryPassword}</p>
+            <p>Please sign in and change this password as soon as possible.</p>
+            """;
+
+        try
+        {
+            await emailService.SendAsync(toEmail, subject, body, cancellationToken);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send password email to staff account {Email}.", toEmail);
+            return false;
+        }
+    }
+
+    private const string TemporaryPasswordUppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";   // no I/O — easy to misread
+    private const string TemporaryPasswordLowercase = "abcdefghijkmnopqrstuvwxyz";   // no l
+    private const string TemporaryPasswordDigits = "23456789";                      // no 0/1
+    private const int TemporaryPasswordLength = 12;
+
+    /// <summary>
+    /// Meets the Identity password policy (digit, upper, lower, 8+ chars — see
+    /// DependencyInjection.AddIdentityCore) while avoiding characters that are
+    /// easy to mistype when an admin reads it aloud or copies it by hand.
+    /// </summary>
+    private static string GenerateTemporaryPassword()
+    {
+        const string all = TemporaryPasswordUppercase + TemporaryPasswordLowercase + TemporaryPasswordDigits;
+
+        Span<char> password = stackalloc char[TemporaryPasswordLength];
+        password[0] = TemporaryPasswordUppercase[RandomNumberGenerator.GetInt32(TemporaryPasswordUppercase.Length)];
+        password[1] = TemporaryPasswordLowercase[RandomNumberGenerator.GetInt32(TemporaryPasswordLowercase.Length)];
+        password[2] = TemporaryPasswordDigits[RandomNumberGenerator.GetInt32(TemporaryPasswordDigits.Length)];
+        for (var i = 3; i < password.Length; i++)
+        {
+            password[i] = all[RandomNumberGenerator.GetInt32(all.Length)];
+        }
+
+        // Shuffle so the three guaranteed character classes aren't always up front.
+        for (var i = password.Length - 1; i > 0; i--)
+        {
+            var j = RandomNumberGenerator.GetInt32(i + 1);
+            (password[i], password[j]) = (password[j], password[i]);
+        }
+
+        return new string(password);
     }
 
     private async Task<string> NextStaffNumberAsync(CancellationToken cancellationToken)

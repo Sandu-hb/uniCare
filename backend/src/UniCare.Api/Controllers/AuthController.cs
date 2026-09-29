@@ -12,7 +12,8 @@ namespace UniCare.Api.Controllers;
 public class AuthController(
     IAuthService authService,
     IValidator<LoginRequest> loginValidator,
-    IValidator<RefreshRequest> refreshValidator) : ControllerBase
+    IValidator<RefreshRequest> refreshValidator,
+    IValidator<ChangePasswordRequest> changePasswordValidator) : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
@@ -59,6 +60,32 @@ public class AuthController(
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await authService.GetCurrentUserAsync(userId, cancellationToken));
+    }
+
+    /// <summary>
+    /// Changes the signed-in user's own password and clears MustChangePassword.
+    /// Required before an admin-created staff account (or one just reset by an
+    /// admin) can reach anywhere else in the app.
+    /// </summary>
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<ActionResult<CurrentUserDto>> ChangePassword(
+        ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var validation = await changePasswordValidator.ValidateAsync(request, cancellationToken);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            return ValidationProblem(ModelState);
+        }
+
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        // InvalidCredentialsException (401, wrong current password) and
+        // ConflictException (409, new password fails policy) are caught by
+        // GlobalExceptionHandler — this method only handles the happy path.
+        return Ok(await authService.ChangePasswordAsync(userId, request, cancellationToken));
     }
 
     /// <summary>

@@ -19,7 +19,7 @@ public enum AppointmentStatus
 
 public enum StaffRole
 {
-    Unassigned, Admin, Doctor, LabStaff, PharmacyStaff
+    Unassigned, Admin, Doctor, Nurse, LabStaff, PharmacyStaff
 }
 
 public enum VisitStatus { CheckedIn, AwaitingLab, AwaitingPharmacy, Completed, Abandoned }

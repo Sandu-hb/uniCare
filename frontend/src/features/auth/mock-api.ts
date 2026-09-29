@@ -1,5 +1,7 @@
 import { ROLES, type Role } from '@/config/roles'
-import type { AccountStatus, CurrentUser, LoginRequest, LoginResponse, RefreshResponse } from './types'
+import type {
+  AccountStatus, ChangePasswordRequest, CurrentUser, LoginRequest, LoginResponse, RefreshResponse,
+} from './types'
 
 /**
  * In-memory stand-in for the real ASP.NET Core auth endpoints, selected by
@@ -15,6 +17,8 @@ interface MockAccount {
   fullName: string
   roles: Role[]
   status: AccountStatus
+  specialization?: string | null
+  mustChangePassword?: boolean
 }
 
 const accounts: MockAccount[] = [
@@ -43,6 +47,15 @@ const accounts: MockAccount[] = [
     status: 'Active',
   },
   {
+    id: 'u-nurse-1',
+    email: 'nurse@uom.lk',
+    password: 'Passw0rd',
+    fullName: 'Chamari Fernando',
+    roles: [ROLES.Nurse],
+    status: 'Active',
+    specialization: 'Laboratory',
+  },
+  {
     id: 'u-pharmacy-1',
     email: 'pharmacy@uom.lk',
     password: 'Passw0rd',
@@ -57,6 +70,16 @@ const accounts: MockAccount[] = [
     fullName: 'Laboratory Bench',
     roles: [ROLES.LabStaff],
     status: 'Active',
+  },
+  {
+    id: 'u-newstaff-1',
+    email: 'newstaff@uom.lk',
+    password: 'Temp1234',
+    fullName: 'Kavindu Silva',
+    roles: [ROLES.Doctor],
+    status: 'Active',
+    specialization: 'Clinical',
+    mustChangePassword: true,
   },
 ]
 
@@ -81,6 +104,8 @@ function toUser(account: MockAccount): CurrentUser {
     fullName: account.fullName,
     roles: account.roles,
     status: account.status,
+    specialization: account.specialization ?? null,
+    mustChangePassword: account.mustChangePassword ?? false,
   }
 }
 
@@ -145,6 +170,22 @@ export async function me(token: string): Promise<CurrentUser> {
   if (account.status === 'Suspended') {
     throw new AuthApiError(403, 'This account has been suspended. Contact the medical centre.')
   }
+  return toUser(account)
+}
+
+export async function changePassword(
+  token: string, { currentPassword, newPassword }: ChangePasswordRequest,
+): Promise<CurrentUser> {
+  await delay()
+  const account = accounts.find((a) => tokenFor(a) === token)
+  if (!account) {
+    throw new AuthApiError(401, 'Session expired. Sign in again.')
+  }
+  if (account.password !== currentPassword) {
+    throw new AuthApiError(401, 'Current password is incorrect.')
+  }
+  account.password = newPassword
+  account.mustChangePassword = false
   return toUser(account)
 }
 

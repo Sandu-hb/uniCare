@@ -28,4 +28,14 @@ public interface IAuthService
     Task RevokeAsync(Guid userId, CancellationToken cancellationToken = default);
 
     Task<CurrentUserDto> GetCurrentUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Changes a signed-in user's own password and clears MustChangePassword —
+    /// the forced first step after an admin creates their account or resets
+    /// their credentials.
+    /// </summary>
+    /// <exception cref="Exceptions.InvalidCredentialsException">CurrentPassword does not match.</exception>
+    /// <exception cref="Exceptions.ConflictException">NewPassword fails the Identity password policy.</exception>
+    Task<CurrentUserDto> ChangePasswordAsync(
+        Guid userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
 }

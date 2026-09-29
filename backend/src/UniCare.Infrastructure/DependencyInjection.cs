@@ -41,6 +41,7 @@ public static class DependencyInjection
 
         services.AddScoped<IFileStorage, CloudinaryFileStorage>();
         services.AddHttpClient<IWellnessAssistant, GeminiWellnessAssistant>();
+        services.AddSingleton<IEmailService, SmtpEmailService>();
 
         // Scoped lifetime: one DbContext per HTTP request. It is not thread-safe and
         // it tracks changes, so a singleton would leak entities between users.

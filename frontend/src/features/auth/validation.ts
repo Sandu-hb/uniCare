@@ -51,3 +51,21 @@ export const registerStudentSchema = z
   })
 
 export type RegisterStudentFormValues = z.infer<typeof registerStudentSchema>
+
+/** Mirrors ChangePasswordRequestValidator on the server. */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password.'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters.'),
+    confirmPassword: z.string().min(1, 'Re-enter your new password.'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    message: 'New password must be different from the current password.',
+    path: ['newPassword'],
+  })
+
+export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>

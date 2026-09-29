@@ -22,6 +22,9 @@ export function PublicOnlyRoute() {
     if (user.status === 'PendingApproval' && !user.roles.includes(ROLES.Student)) {
       return <Navigate to={ROUTES.pendingApproval} replace />
     }
+    if (user.mustChangePassword) {
+      return <Navigate to={ROUTES.changePassword} replace />
+    }
     return <Navigate to={dashboardFor(user.roles)} replace />
   }
 

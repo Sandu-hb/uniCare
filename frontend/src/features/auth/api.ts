@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api-client'
 import { readRefreshToken, readToken } from '@/lib/token-storage'
 import * as mockApi from './mock-api'
-import type { CurrentUser, LoginRequest, LoginResponse, RefreshResponse } from './types'
+import type { ChangePasswordRequest, CurrentUser, LoginRequest, LoginResponse, RefreshResponse } from './types'
 
 /**
  * Switches between the in-memory mock and the real backend by one env flag,
@@ -37,6 +37,20 @@ export async function me(): Promise<CurrentUser> {
   }
 
   const { data } = await apiClient.get<CurrentUser>('/auth/me')
+  return data
+}
+
+export async function changePassword(request: ChangePasswordRequest): Promise<CurrentUser> {
+  if (USE_MOCK_AUTH) {
+    const token = readToken()
+    if (!token) throw new mockApi.AuthApiError(401, 'Not signed in.')
+    return mockApi.changePassword(token, request)
+  }
+
+  const { data } = await apiClient.post<CurrentUser>('/auth/change-password', {
+    currentPassword: request.currentPassword,
+    newPassword: request.newPassword,
+  })
   return data
 }
 

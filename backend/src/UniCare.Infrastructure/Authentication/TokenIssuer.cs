@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using UniCare.Application.Features.Auth.Dtos;
+using UniCare.Infrastructure.Data;
 
 namespace UniCare.Infrastructure.Authentication;
 
@@ -12,7 +14,8 @@ namespace UniCare.Infrastructure.Authentication;
 /// </summary>
 public class TokenIssuer(
     UserManager<ApplicationUser> userManager,
-    JwtTokenGenerator tokenGenerator)
+    JwtTokenGenerator tokenGenerator,
+    UniCareDbContext db)
 {
     private const string LoginProvider = "UniCare";
     private const string RefreshTokenName = "RefreshToken";
@@ -37,22 +40,37 @@ public class TokenIssuer(
         // replaces the value if present — automatic rotation with no extra SQL.
         await userManager.SetAuthenticationTokenAsync(user, LoginProvider, RefreshTokenName, refreshToken);
 
+        var specialization = await GetSpecializationAsync(user.Id, cancellationToken);
+
         return new AuthResponse
         {
             Token = token,
             ExpiresAtUtc = expiresAtUtc,
             RefreshToken = refreshToken,
             RefreshTokenExpiresAtUtc = refreshTokenExpiresAtUtc,
-            User = ToCurrentUserDto(user, roles),
+            User = ToCurrentUserDto(user, roles, specialization),
         };
     }
 
-    public static CurrentUserDto ToCurrentUserDto(ApplicationUser user, IList<string> roles) => new()
+    /// <summary>
+    /// A Student has no Staff row at all, so this is null for them; a staff
+    /// account with no specialization set is also null — both cases mean
+    /// "no specialization-based access beyond the account's role(s)".
+    /// </summary>
+    public async Task<string?> GetSpecializationAsync(Guid applicationUserId, CancellationToken cancellationToken = default) =>
+        await db.Staff.AsNoTracking()
+            .Where(s => s.ApplicationUserId == applicationUserId)
+            .Select(s => s.Specialization)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public static CurrentUserDto ToCurrentUserDto(ApplicationUser user, IList<string> roles, string? specialization = null) => new()
     {
         Id = user.Id,
         FullName = user.FullName,
         Email = user.Email ?? string.Empty,
         Roles = [.. roles],
         Status = user.Status,
+        MustChangePassword = user.MustChangePassword,
+        Specialization = specialization,
     };
 }

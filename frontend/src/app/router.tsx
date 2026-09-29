@@ -3,6 +3,7 @@ import { ROLES, STAFF_ROLES } from '@/config/roles'
 import { ROUTES } from '@/config/routes'
 import { StaffAppointmentsPage } from '@/features/appointments/StaffAppointmentsPage'
 import { StudentAppointmentsPage } from '@/features/appointments/StudentAppointmentsPage'
+import { ChangePasswordPage } from '@/features/auth/ChangePasswordPage'
 import { ForbiddenPage } from '@/features/auth/ForbiddenPage'
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/LoginPage'
@@ -15,6 +16,7 @@ import { PrescriptionsPage } from '@/features/medical-records/PrescriptionsPage'
 import { ReportsPage } from '@/features/medical-records/ReportsPage'
 import { MedicalProfilePage } from '@/features/medical-profiles/MedicalProfilePage'
 import { PharmacyQueuePage } from '@/features/pharmacy/PharmacyQueuePage'
+import { StaffPage } from '@/features/staff/StaffPage'
 import { StudentsPage } from '@/features/students/StudentsPage'
 import { SystemStatusPage } from '@/features/system/SystemStatusPage'
 import { DoctorQueuePage } from '@/features/visits/DoctorQueuePage'
@@ -47,6 +49,12 @@ export function AppRouter() {
       <Route path={ROUTES.pendingApproval} element={<PendingApprovalPage />} />
       <Route path={ROUTES.forbidden} element={<ForbiddenPage />} />
 
+      {/* allowPending: harmless if a pending account ever needs this too — the
+          real audience is an Active admin-created staff account on first login. */}
+      <Route element={<ProtectedRoute allowPending />}>
+        <Route path={ROUTES.changePassword} element={<ChangePasswordPage />} />
+      </Route>
+
       <Route element={<ProtectedRoute allowedRoles={STAFF_ROLES} />}>
         <Route element={<StaffLayout />}>
           <Route path={ROUTES.staff.dashboard} element={<StaffDashboardPage />} />
@@ -57,18 +65,40 @@ export function AppRouter() {
           <Route path="/students/:studentId/medical-profile" element={<MedicalProfilePage />} />
 
           <Route element={<ProtectedRoute allowedRoles={[ROLES.Admin]} />}>
+            <Route path={ROUTES.staff.accounts} element={<StaffPage />} />
             <Route path={ROUTES.staff.appointments} element={<StaffAppointmentsPage />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.Doctor, ROLES.Admin]} />}>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={[ROLES.Doctor, ROLES.Admin]}
+                allowedSpecializations={['Clinical', 'Dental']}
+              />
+            }
+          >
             <Route path={ROUTES.staff.queue} element={<DoctorQueuePage />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.LabStaff, ROLES.Admin]} />}>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={[ROLES.LabStaff, ROLES.Admin]}
+                allowedSpecializations={['Laboratory']}
+              />
+            }
+          >
             <Route path={ROUTES.staff.labQueue} element={<LabQueuePage />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.PharmacyStaff, ROLES.Admin]} />}>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={[ROLES.PharmacyStaff, ROLES.Admin]}
+                allowedSpecializations={['Pharmacy']}
+              />
+            }
+          >
             <Route path={ROUTES.staff.pharmacyQueue} element={<PharmacyQueuePage />} />
           </Route>
 

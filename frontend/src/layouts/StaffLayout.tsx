@@ -1,11 +1,12 @@
 import {
   Activity, Calendar, FlaskConical, HeartPulse, Home, ListOrdered, LogOut, Menu, Pill,
-  Users, X, type LucideIcon,
+  UserCog, Users, X, type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
 import { ROLES, type Role } from '@/config/roles'
+import { ROUTES } from '@/config/routes'
 import { useAuth } from '@/features/auth/auth-context'
 import { useStudentAccounts } from '@/features/students/hooks'
 
@@ -14,6 +15,8 @@ interface NavItem {
   label: string
   icon: LucideIcon
   roles?: Role[]
+  /** Also shown to a staff member whose Staff.Specialization matches, regardless of roles. */
+  specializations?: string[]
 }
 
 const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
@@ -25,21 +28,22 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
       { to: '/staff/appointments', label: 'Appointments', icon: Calendar, roles: [ROLES.Admin] },
       {
         to: '/staff/queue', label: 'Doctor queue', icon: ListOrdered,
-        roles: [ROLES.Doctor, ROLES.Admin],
+        roles: [ROLES.Doctor, ROLES.Admin], specializations: ['Clinical', 'Dental'],
       },
       {
         to: '/staff/lab-queue', label: 'Laboratory queue', icon: FlaskConical,
-        roles: [ROLES.LabStaff, ROLES.Admin],
+        roles: [ROLES.LabStaff, ROLES.Admin], specializations: ['Laboratory'],
       },
       {
         to: '/staff/pharmacy-queue', label: 'Pharmacy queue', icon: Pill,
-        roles: [ROLES.PharmacyStaff, ROLES.Admin],
+        roles: [ROLES.PharmacyStaff, ROLES.Admin], specializations: ['Pharmacy'],
       },
     ],
   },
   {
     title: 'Administration',
     items: [
+      { to: ROUTES.staff.accounts, label: 'Staff', icon: UserCog, roles: [ROLES.Admin] },
       { to: '/system-status', label: 'System status', icon: Activity },
       { to: '/staff/wellness-alerts', label: 'Wellness alerts', icon: HeartPulse, roles: [ROLES.Admin] },
     ],
@@ -124,7 +128,12 @@ export function StaffLayout() {
 
         <nav className="flex flex-1 flex-col gap-[18px] overflow-y-auto">
           {NAV_SECTIONS.map((section) => {
-            const items = section.items.filter((item) => !item.roles || hasRole(...item.roles))
+            const items = section.items.filter((item) => {
+              if (!item.roles) return true
+              if (hasRole(...item.roles)) return true
+              return !!item.specializations && !!user?.specialization
+                && item.specializations.includes(user.specialization)
+            })
             if (items.length === 0) return null
 
             return (

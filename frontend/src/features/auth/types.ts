@@ -11,6 +11,10 @@ export interface CurrentUser {
   email: string
   roles: Role[]
   status: AccountStatus
+  /** The linked Staff row's specialization (e.g. "Laboratory"), or null for a Student or unset staff. */
+  specialization: string | null
+  /** True right after an admin creates or resets this account — must change the temporary password before anything else. */
+  mustChangePassword: boolean
 }
 
 export interface LoginRequest {
@@ -20,6 +24,11 @@ export interface LoginRequest {
 
 export interface RefreshRequest {
   refreshToken: string
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
 }
 
 export interface LoginResponse {

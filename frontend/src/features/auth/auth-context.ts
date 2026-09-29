@@ -15,6 +15,8 @@ export interface AuthContextValue {
    * student in right after their account is created).
    */
   establishSession: (response: LoginResponse) => void
+  /** Changes the signed-in user's own password and clears mustChangePassword on success. */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<CurrentUser>
   logout: () => Promise<void>
 }
 

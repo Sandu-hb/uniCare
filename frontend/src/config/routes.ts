@@ -9,6 +9,7 @@ export const ROUTES = {
   register: '/register',
   registerStudent: '/register/student',
   forgotPassword: '/forgot-password',
+  changePassword: '/change-password',
   pendingApproval: '/pending-approval',
   forbidden: '/forbidden',
   systemStatus: '/system-status',
@@ -26,6 +27,7 @@ export const ROUTES = {
   staff: {
     dashboard: '/staff',
     students: '/staff/students',
+    accounts: '/staff/accounts',
     appointments: '/staff/appointments',
     queue: '/staff/queue',
     labQueue: '/staff/lab-queue',

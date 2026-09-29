@@ -40,6 +40,12 @@ export function LoginPage() {
         navigate(ROUTES.pendingApproval, { replace: true })
         return
       }
+      // A temporary (admin-issued) password must be replaced before reaching
+      // anywhere else — including wherever they were originally headed.
+      if (user.mustChangePassword) {
+        navigate(ROUTES.changePassword, { replace: true })
+        return
+      }
       const from = (location.state as { from?: Location } | null)?.from
       navigate(from ?? dashboardFor(user.roles), { replace: true })
     } catch (error) {

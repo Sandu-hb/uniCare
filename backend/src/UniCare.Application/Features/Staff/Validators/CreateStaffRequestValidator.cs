@@ -8,7 +8,7 @@ public class CreateStaffRequestValidator : AbstractValidator<CreateStaffRequest>
     public CreateStaffRequestValidator()
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(256);
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(8);
+        RuleFor(x => x.Password).MinimumLength(8).When(x => !string.IsNullOrEmpty(x.Password));
         RuleFor(x => x.FullName).NotEmpty().MaximumLength(256);
         RuleFor(x => x.Role).IsInEnum();
 

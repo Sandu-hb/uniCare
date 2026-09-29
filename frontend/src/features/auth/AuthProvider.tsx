@@ -68,6 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.user)
         setStatus('authenticated')
       },
+      changePassword: async (currentPassword, newPassword) => {
+        const updatedUser = await authApi.changePassword({ currentPassword, newPassword })
+        setUser(updatedUser)
+        return updatedUser
+      },
       logout: async () => {
         try {
           await authApi.logout()

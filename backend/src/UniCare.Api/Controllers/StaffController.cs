@@ -84,4 +84,8 @@ public class StaffController(
     [HttpPost("{id:guid}/suspend")]
     public async Task<ActionResult<StaffDto>> Suspend(Guid id, CancellationToken cancellationToken) =>
         Ok(await staffService.SuspendAsync(id, cancellationToken));
+
+    [HttpPost("{id:guid}/resend-credentials")]
+    public async Task<ActionResult<StaffDto>> ResendCredentials(Guid id, CancellationToken cancellationToken) =>
+        Ok(await staffService.ResendCredentialsAsync(id, cancellationToken));
 }

@@ -14,4 +14,12 @@ public class ApplicationUser : IdentityUser<Guid>
     public required string FullName { get; set; }
 
     public AccountStatus Status { get; set; } = AccountStatus.Active;
+
+    /// <summary>
+    /// True right after an admin creates a staff account (temporary,
+    /// system-generated password) or resets one's credentials — cleared the
+    /// moment the user successfully changes their own password. Self-registered
+    /// accounts choose their own password up front, so this never applies to them.
+    /// </summary>
+    public bool MustChangePassword { get; set; }
 }

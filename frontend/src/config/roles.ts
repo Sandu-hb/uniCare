@@ -1,5 +1,5 @@
 /**
- * Four roles: a student, and three staff portals. Dentists register as
+ * Five roles: a student, and four staff portals. Dentists register as
  * Doctor (distinguished via Staff.Specialization); the pharmacy and lab
  * each run off one shared account rather than per-person logins. These
  * strings must match the backend's role claims exactly — a typo here
@@ -9,6 +9,7 @@ export const ROLES = {
   Student: 'Student',
   Admin: 'Admin',
   Doctor: 'Doctor',
+  Nurse: 'Nurse',
   LabStaff: 'LabStaff',
   PharmacyStaff: 'PharmacyStaff',
 } as const
@@ -19,6 +20,7 @@ export type Role = (typeof ROLES)[keyof typeof ROLES]
 export const STAFF_ROLES: Role[] = [
   ROLES.Admin,
   ROLES.Doctor,
+  ROLES.Nurse,
   ROLES.LabStaff,
   ROLES.PharmacyStaff,
 ]

@@ -18,4 +18,13 @@ public record StaffDto
 
     /// <summary>Whether the linked sign-in account may authenticate at all.</summary>
     public required AccountStatus AccountStatus { get; init; }
+
+    /// <summary>
+    /// Set only on the response to a create call that generated a temporary
+    /// password (i.e. none was supplied): true if the welcome email carrying it
+    /// was sent successfully, false if it could not be delivered. The password
+    /// itself is never returned to the caller — see StaffService.CreateAccountAsync.
+    /// Null when this create call didn't generate a password at all.
+    /// </summary>
+    public bool? WelcomeEmailSent { get; init; }
 }

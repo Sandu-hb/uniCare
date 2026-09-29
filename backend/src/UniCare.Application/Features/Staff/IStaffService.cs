@@ -28,4 +28,12 @@ public interface IStaffService
 
     /// <summary>Valid from Active or PendingApproval only. Also revokes the refresh token.</summary>
     Task<StaffDto> SuspendAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Generates a fresh temporary password for an existing staff account and
+    /// emails it, the same way CreateAsync does — for when the original welcome
+    /// email never arrived (e.g. sent before SMTP was configured) or was lost.
+    /// The old password stops working immediately.
+    /// </summary>
+    Task<StaffDto> ResendCredentialsAsync(Guid id, CancellationToken cancellationToken = default);
 }
